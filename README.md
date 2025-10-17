@@ -44,12 +44,21 @@
 
 | ツール | 推奨バージョン / 備考 |
 | --- | --- |
-| Node.js | v20 LTS |
+| Node.js | v20 LTS（`nvm install 20 && nvm use 20` 推奨） |
 | パッケージマネージャ | pnpm 9 系 (`npm install -g pnpm`) |
 | Firebase CLI | `npm install -g firebase-tools` |
 | Git | 2.40 以降 |
 
 > pnpm のワークスペース機能を使い、`apps/` と `packages/` を一元管理する前提です。
+
+### Node.js のバージョン切り替え例（nvm 利用）
+
+```bash
+nvm install 20
+nvm use 20
+nvm alias default 20   # 任意：新しいターミナルで Node 20 を既定にする
+node -v                # v20.x.x になっていることを確認
+```
 
 ## セットアップ概略
 
