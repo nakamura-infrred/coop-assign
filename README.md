@@ -40,20 +40,42 @@
 
 今後、アプリコード・設定ファイル・ドキュメントを上記のフォルダーに配置していきます。
 
+## 事前準備
+
+| ツール | 推奨バージョン / 備考 |
+| --- | --- |
+| Node.js | v20 LTS |
+| パッケージマネージャ | pnpm 9 系 (`npm install -g pnpm`) |
+| Firebase CLI | `npm install -g firebase-tools` |
+| Git | 2.40 以降 |
+
+> pnpm のワークスペース機能を使い、`apps/` と `packages/` を一元管理する前提です。
+
 ## セットアップ概略
 
 1. **Firebase プロジェクトの準備**
    - Firebase コンソールで新規プロジェクトを作成
    - Authentication で Google サインインを有効化
    - Firestore データベースを作成（ネイティブモード）
+   - Firebase Hosting を有効化（SPA 用にリライト設定を後で追加）
 2. **ローカル環境での開発**
    - `git clone` で本リポジトリを取得
-   - `cd apps/web` 配下で依存関係をインストール（後続で package 構成を追加予定）
-   - Firebase Emulator Suite を利用する際は `firebase emulators:start --only auth,firestore` を実行
+   - `pnpm install`（ルートで実行）
+   - Firebase Emulator Suite を使う場合は `firebase emulators:start --only auth,firestore` を実行
 3. **環境変数の設定**
    - `apps/web/.env.local` に Firebase config（API キーなど）と Firestore 設定を記載
 4. **デプロイ**
-   - `firebase login` → `firebase init hosting` → `firebase deploy` の順で Firebase Hosting に公開
+   - `firebase login`
+   - `firebase use <your-project-id>`
+   - `pnpm run deploy`（後続のスクリプトで `firebase deploy --only hosting,firestore` を呼び出す予定）
+
+詳細な手順や CLI スクリプトは、実装が進み次第 `docs/` と README を拡充していきます。
+
+## 開発フローとバージョニング
+
+- ブランチ戦略: `main` は常にデプロイ可能な状態を維持し、作業は `feature/*` ブランチで行って Pull Request を経てマージする。
+- コミット規約: [Conventional Commits](https://www.conventionalcommits.org/) に準拠した形式（例: `feat: add calendar scaffold`）を基本とする。
+- バージョニング: セマンティックバージョニング（SemVer）に従ってタグを付与し、リリース時は `pnpm version <patch|minor|major>` を利用する。
 
 詳細な手順やスクリプトは、実装が進み次第 `docs/` と README を拡充していきます。
 
@@ -66,3 +88,7 @@
 5. セキュリティルール、監査ログ、バックアップ手順の文書化
 
 フィードバックやプルリクエストを歓迎します。今後の開発状況については `docs/` 配下にまとめていきます。
+
+## ライセンス
+
+Apache License 2.0 の下で提供します。詳細は `LICENSE` を参照してください。
