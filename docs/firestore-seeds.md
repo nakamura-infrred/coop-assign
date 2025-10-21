@@ -6,6 +6,16 @@
 
 `data/seeds/` ディレクトリに以下の JSON ファイルを配置します（`.gitignore` 対象のためリポジトリには含まれません）。
 
+### team_place.json（任意）
+
+公開されているチーム・会場一覧（マスターファイル）を配置しておくと、以下のコマンドで `teams.json` / `venues.json` を自動生成できます。
+
+```bash
+pnpm seed:prepare
+```
+
+生成後に内容をレビューし、必要に応じて手動で調整してください。
+
 ### venues.json
 
 ```json
@@ -61,6 +71,7 @@ export SEED_TENANT_ID="default"   # 任意。省略時は default
 ## 3. シードを Firestore に反映する
 
 ```bash
+pnpm seed:prepare   # team_place.json から生成したい場合
 pnpm seed:push
 ```
 
