@@ -25,17 +25,27 @@
 ## ディレクトリ構成（初期）
 
 ```
+├── .firebaserc
+├── LICENSE
 ├── README.md
+├── firebase.json          # Hosting / Firestore の基本設定
+├── package.json           # pnpm ワークスペースのルート設定
+├── pnpm-lock.yaml
+├── pnpm-workspace.yaml
 ├── apps/
-│   └── web/              # React アプリ本体
+│   └── web/               # React アプリ本体（Vite + React + TS）
+│       ├── index.html
+│       ├── package.json
 │       ├── public/
 │       └── src/
-├── packages/
-│   ├── adapters/         # ストレージアダプター実装とインターフェース
-│   └── domain/           # ドメインモデルやユースケース
+├── docs/                  # アーキテクチャメモや運用ガイド
 ├── infra/
-│   └── firebase/         # Firebase 関連設定（rules, indexes 等）
-└── docs/                 # アーキテクチャメモや運用ガイド
+│   └── firebase/          # Firestore ルール / インデックス
+│       ├── firestore.indexes.json
+│       └── firestore.rules
+└── packages/
+    ├── adapters/          # ストレージアダプター実装とインターフェース
+    └── domain/            # ドメインモデルやユースケース
 ```
 
 今後、アプリコード・設定ファイル・ドキュメントを上記のフォルダーに配置していきます。
@@ -45,11 +55,11 @@
 | ツール | 推奨バージョン / 備考 |
 | --- | --- |
 | Node.js | v20 LTS（`nvm install 20 && nvm use 20` 推奨） |
-| パッケージマネージャ | pnpm 9 系 (`npm install -g pnpm`) |
+| パッケージマネージャ | pnpm 10 系（`corepack prepare pnpm@10.18.3 --activate`） |
 | Firebase CLI | `npm install -g firebase-tools` |
 | Git | 2.40 以降 |
 
-> pnpm のワークスペース機能を使い、`apps/` と `packages/` を一元管理する前提です。
+> pnpm のワークスペース機能を使い、`apps/` と `packages/` を一元管理する前提です。`pnpm install` 後にバイナリビルドが必要と表示された場合は `pnpm approve-builds` を実行してください。
 
 ### Node.js のバージョン切り替え例（nvm 利用）
 
@@ -59,6 +69,15 @@ nvm use 20
 nvm alias default 20   # 任意：新しいターミナルで Node 20 を既定にする
 node -v                # v20.x.x になっていることを確認
 ```
+
+### pnpm の有効化例（corepack 利用）
+
+```bash
+corepack prepare pnpm@10.18.3 --activate
+pnpm -v   # 10.x.x が表示されることを確認
+```
+
+> 権限の都合で corepack がパスに追加できない場合は `~/.nvm/versions/node/v20.19.5/bin/pnpm` を直接利用するか、`npm config set prefix "$HOME/.local"` を設定したうえで `npm install -g pnpm` を実行してください。
 
 ## セットアップ概略
 
@@ -75,10 +94,19 @@ node -v                # v20.x.x になっていることを確認
    - `apps/web/.env.local` に Firebase config（API キーなど）と Firestore 設定を記載
 4. **デプロイ**
    - `firebase login`
+   - `.firebaserc` の `your-project-id` を実プロジェクト ID に書き換え
    - `firebase use <your-project-id>`
    - `pnpm run deploy`（後続のスクリプトで `firebase deploy --only hosting,firestore` を呼び出す予定）
 
 詳細な手順や CLI スクリプトは、実装が進み次第 `docs/` と README を拡充していきます。
+
+## 利用できる主要コマンド
+
+- `pnpm dev` : `apps/web` の開発サーバーを起動（Vite）
+- `pnpm build` : `apps/web/dist` へ本番ビルド
+- `pnpm lint` : ワークスペース全体の Lint（`--if-present` で未導入パッケージはスキップ）
+- `pnpm test` : 将来的なテストコマンドの集合
+- `pnpm deploy` : ビルド後に `firebase deploy --config firebase.json --only hosting` を実行
 
 ## 開発フローとバージョニング
 
