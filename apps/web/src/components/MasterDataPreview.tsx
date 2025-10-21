@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useMasterData } from '../providers/MasterDataProvider'
 
+type ViewMode = 'teams' | 'venues'
 const PAGE_SIZE = 20
 
 const normalize = (value: string) => value.toLocaleLowerCase('ja')
@@ -9,14 +10,17 @@ const optionLabel = (value: string | null | undefined, fallback: string) =>
 
 export function MasterDataPreview() {
   const { teams, venues, loading, error } = useMasterData()
+  const [viewMode, setViewMode] = useState<ViewMode>('teams')
+
   const [teamFilter, setTeamFilter] = useState('')
   const [teamCategory, setTeamCategory] = useState('all')
-  const [teamLeague, setTeamLeague] = useState('all')
   const [teamRegion, setTeamRegion] = useState('all')
+  const [teamLeague, setTeamLeague] = useState('all')
+  const [teamLimit, setTeamLimit] = useState(PAGE_SIZE)
+
   const [venueFilter, setVenueFilter] = useState('')
   const [venueType, setVenueType] = useState('all')
   const [venueRegion, setVenueRegion] = useState('all')
-  const [teamLimit, setTeamLimit] = useState(PAGE_SIZE)
   const [venueLimit, setVenueLimit] = useState(PAGE_SIZE)
 
   const teamCategories = useMemo(() => {
@@ -26,18 +30,18 @@ export function MasterDataPreview() {
     return ['all', ...Array.from(labels).sort((a, b) => a.localeCompare(b, 'ja'))]
   }, [teams])
 
+  const teamRegions = useMemo(() => {
+    const labels = new Set(
+      teams.map((team) => optionLabel(team.regionLabel ?? team.region ?? '', '未定義')),
+    )
+    return ['all', ...Array.from(labels).sort((a, b) => a.localeCompare(b, 'ja'))]
+  }, [teams])
+
   const teamLeagues = useMemo(() => {
     const labels = new Set(
       teams
         .map((team) => (team.league && team.league.trim().length > 0 ? team.league : null))
         .filter((league): league is string => Boolean(league)),
-    )
-    return ['all', ...Array.from(labels).sort((a, b) => a.localeCompare(b, 'ja'))]
-  }, [teams])
-
-  const teamRegions = useMemo(() => {
-    const labels = new Set(
-      teams.map((team) => optionLabel(team.regionLabel ?? team.region ?? '', '未定義')),
     )
     return ['all', ...Array.from(labels).sort((a, b) => a.localeCompare(b, 'ja'))]
   }, [teams])
@@ -60,22 +64,22 @@ export function MasterDataPreview() {
     const keyword = normalize(teamFilter.trim())
     return teams.filter((team) => {
       const categoryLabel = optionLabel(team.primaryLabel ?? team.category ?? '', '未分類')
-      const leagueLabel = optionLabel(team.league ?? '', '未設定')
       const regionLabel = optionLabel(team.regionLabel ?? team.region ?? '', '未定義')
+      const leagueLabel = optionLabel(team.league ?? '', '未設定')
 
       const matchesCategory = teamCategory === 'all' || categoryLabel === teamCategory
-      const matchesLeague = teamLeague === 'all' || leagueLabel === teamLeague
       const matchesRegion = teamRegion === 'all' || regionLabel === teamRegion
+      const matchesLeague = teamLeague === 'all' || leagueLabel === teamLeague
       const matchesKeyword =
         keyword.length === 0
           ? true
           : normalize(
-              `${team.name}${leagueLabel}${categoryLabel}${regionLabel}${team.shortName ?? ''}`,
+              `${team.name}${categoryLabel}${regionLabel}${leagueLabel}${team.shortName ?? ''}`,
             ).includes(keyword)
 
-      return matchesCategory && matchesLeague && matchesRegion && matchesKeyword
+      return matchesCategory && matchesRegion && matchesLeague && matchesKeyword
     })
-  }, [teamCategory, teamLeague, teamRegion, teamFilter, teams])
+  }, [teamCategory, teamRegion, teamLeague, teamFilter, teams])
 
   const filteredVenues = useMemo(() => {
     const keyword = normalize(venueFilter.trim())
@@ -108,210 +112,223 @@ export function MasterDataPreview() {
 
   return (
     <section className="app__section">
-      <h2>マスターデータ</h2>
+      <header className="master-grid__header master-grid__header--top">
+        <div>
+          <h2>マスターデータ</h2>
+          <p className="app__muted">
+            {viewMode === 'teams'
+              ? `${filteredTeams.length.toLocaleString()} / ${teams.length.toLocaleString()} 件`
+              : `${filteredVenues.length.toLocaleString()} / ${venues.length.toLocaleString()} 件`}
+          </p>
+        </div>
+        <div className="master-view-toggle">
+          <button
+            type="button"
+            className={
+              viewMode === 'teams'
+                ? 'master-view-toggle__button is-active'
+                : 'master-view-toggle__button'
+            }
+            onClick={() => setViewMode('teams')}
+          >
+            チーム
+          </button>
+          <button
+            type="button"
+            className={
+              viewMode === 'venues'
+                ? 'master-view-toggle__button is-active'
+                : 'master-view-toggle__button'
+            }
+            onClick={() => setViewMode('venues')}
+          >
+            会場
+          </button>
+        </div>
+      </header>
+
       {loading ? (
         <p className="app__muted">マスターデータを読み込んでいます…</p>
-      ) : (
-        <div className="master-grid">
-          <div>
-            <header className="master-grid__header">
-              <div>
-                <h3>チーム一覧</h3>
-                <p className="app__muted">
-                  {filteredTeams.length.toLocaleString()} / {teams.length.toLocaleString()} 件
-                </p>
-              </div>
-              <div className="master-filters">
-                <label>
-                  区分
-                  <select
-                    value={teamCategory}
-                    onChange={(event) => {
-                      setTeamCategory(event.target.value)
-                      setTeamLimit(PAGE_SIZE)
-                    }}
-                  >
-                    {teamCategories.map((label) => (
-                      <option key={label} value={label}>
-                        {label === 'all' ? 'すべて' : label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label>
-                  リーグ
-                  <select
-                    value={teamLeague}
-                    onChange={(event) => {
-                      setTeamLeague(event.target.value)
-                      setTeamLimit(PAGE_SIZE)
-                    }}
-                  >
-                    {teamLeagues.map((label) => (
-                      <option key={label} value={label}>
-                        {label === 'all' ? 'すべて' : label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label>
-                  地域
-                  <select
-                    value={teamRegion}
-                    onChange={(event) => {
-                      setTeamRegion(event.target.value)
-                      setTeamLimit(PAGE_SIZE)
-                    }}
-                  >
-                    {teamRegions.map((label) => (
-                      <option key={label} value={label}>
-                        {label === 'all' ? 'すべて' : label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              </div>
-              <input
-                className="master-grid__search"
-                type="search"
-                placeholder="チーム名・リーグで絞り込み"
-                value={teamFilter}
+      ) : viewMode === 'teams' ? (
+        <div className="master-panel">
+          <div className="master-filters">
+            <label>
+              区分
+              <select
+                value={teamCategory}
                 onChange={(event) => {
-                  setTeamFilter(event.target.value)
+                  setTeamCategory(event.target.value)
                   setTeamLimit(PAGE_SIZE)
                 }}
-              />
-            </header>
-
-            {filteredTeams.length === 0 ? (
-              <p className="app__muted">該当するチームが見つかりません。</p>
-            ) : (
-              <>
-                <table className="master-table">
-                  <thead>
-                    <tr>
-                      <th>ID</th>
-                      <th>名称</th>
-                      <th>カテゴリ</th>
-                      <th>リーグ</th>
-                      <th>地域</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {visibleTeams.map((team) => (
-                      <tr key={team.id}>
-                        <td title={team.id}>{team.id}</td>
-                        <td title={team.name}>{team.name}</td>
-                        <td>{team.category ?? '未設定'}</td>
-                        <td>{team.league ?? '未設定'}</td>
-                        <td>{team.regionLabel ?? team.region ?? '未設定'}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-                {filteredTeams.length > visibleTeams.length && (
-                  <button
-                    className="master-more"
-                    onClick={() => setTeamLimit((prev) => prev + PAGE_SIZE)}
-                  >
-                    他 {filteredTeams.length - visibleTeams.length} 件を表示
-                  </button>
-                )}
-              </>
-            )}
+              >
+                {teamCategories.map((label) => (
+                  <option key={label} value={label}>
+                    {label === 'all' ? 'すべて' : label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              地域
+              <select
+                value={teamRegion}
+                onChange={(event) => {
+                  setTeamRegion(event.target.value)
+                  setTeamLimit(PAGE_SIZE)
+                }}
+              >
+                {teamRegions.map((label) => (
+                  <option key={label} value={label}>
+                    {label === 'all' ? 'すべて' : label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              リーグ
+              <select
+                value={teamLeague}
+                onChange={(event) => {
+                  setTeamLeague(event.target.value)
+                  setTeamLimit(PAGE_SIZE)
+                }}
+              >
+                {teamLeagues.map((label) => (
+                  <option key={label} value={label}>
+                    {label === 'all' ? 'すべて' : label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <input
+              className="master-grid__search"
+              type="search"
+              placeholder="チーム名で絞り込み"
+              value={teamFilter}
+              onChange={(event) => {
+                setTeamFilter(event.target.value)
+                setTeamLimit(PAGE_SIZE)
+              }}
+            />
           </div>
 
-          <div>
-            <header className="master-grid__header">
-              <div>
-                <h3>会場一覧</h3>
-                <p className="app__muted">
-                  {filteredVenues.length.toLocaleString()} / {venues.length.toLocaleString()} 件
-                </p>
-              </div>
-              <div className="master-filters">
-                <label>
-                  種別
-                  <select
-                    value={venueType}
-                    onChange={(event) => {
-                      setVenueType(event.target.value)
-                      setVenueLimit(PAGE_SIZE)
-                    }}
-                  >
-                    {venueTypes.map((label) => (
-                      <option key={label} value={label}>
-                        {label === 'all' ? 'すべて' : label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label>
-                  地域
-                  <select
-                    value={venueRegion}
-                    onChange={(event) => {
-                      setVenueRegion(event.target.value)
-                      setVenueLimit(PAGE_SIZE)
-                    }}
-                  >
-                    {venueRegions.map((label) => (
-                      <option key={label} value={label}>
-                        {label === 'all' ? 'すべて' : label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              </div>
-              <input
-                className="master-grid__search"
-                type="search"
-                placeholder="会場名・種別で絞り込み"
-                value={venueFilter}
+          {filteredTeams.length === 0 ? (
+            <p className="app__muted">該当するチームが見つかりません。</p>
+          ) : (
+            <>
+              <table className="master-table">
+                <thead>
+                  <tr>
+                    <th>名称</th>
+                    <th>区分</th>
+                    <th>地域</th>
+                    <th>リーグ</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {visibleTeams.map((team) => (
+                    <tr key={team.id}>
+                      <td>{team.name}</td>
+                      <td>{optionLabel(team.primaryLabel ?? team.category ?? '', '未設定')}</td>
+                      <td>{optionLabel(team.regionLabel ?? team.region ?? '', '未設定')}</td>
+                      <td>{optionLabel(team.league ?? '', '未設定')}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {filteredTeams.length > visibleTeams.length && (
+                <button
+                  className="master-more"
+                  onClick={() => setTeamLimit((prev) => prev + PAGE_SIZE)}
+                >
+                  他 {filteredTeams.length - visibleTeams.length} 件を表示
+                </button>
+              )}
+            </>
+          )}
+        </div>
+      ) : (
+        <div className="master-panel">
+          <div className="master-filters">
+            <label>
+              種別
+              <select
+                value={venueType}
                 onChange={(event) => {
-                  setVenueFilter(event.target.value)
+                  setVenueType(event.target.value)
                   setVenueLimit(PAGE_SIZE)
                 }}
-              />
-            </header>
-
-            {filteredVenues.length === 0 ? (
-              <p className="app__muted">該当する会場が見つかりません。</p>
-            ) : (
-              <>
-                <table className="master-table">
-                  <thead>
-                    <tr>
-                      <th>ID</th>
-                      <th>名称</th>
-                      <th>種別</th>
-                      <th>地域</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {visibleVenues.map((venue) => (
-                      <tr key={venue.id}>
-                        <td title={venue.id}>{venue.id}</td>
-                        <td title={venue.name}>{venue.name}</td>
-                        <td>{venue.type ?? '未設定'}</td>
-                        <td>{venue.regionLabel ?? venue.region ?? '未設定'}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-                {filteredVenues.length > visibleVenues.length && (
-                  <button
-                    className="master-more"
-                    onClick={() => setVenueLimit((prev) => prev + PAGE_SIZE)}
-                  >
-                    他 {filteredVenues.length - visibleVenues.length} 件を表示
-                  </button>
-                )}
-              </>
-            )}
+              >
+                {venueTypes.map((label) => (
+                  <option key={label} value={label}>
+                    {label === 'all' ? 'すべて' : label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              地域
+              <select
+                value={venueRegion}
+                onChange={(event) => {
+                  setVenueRegion(event.target.value)
+                  setVenueLimit(PAGE_SIZE)
+                }}
+              >
+                {venueRegions.map((label) => (
+                  <option key={label} value={label}>
+                    {label === 'all' ? 'すべて' : label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <input
+              className="master-grid__search"
+              type="search"
+              placeholder="会場名で絞り込み"
+              value={venueFilter}
+              onChange={(event) => {
+                setVenueFilter(event.target.value)
+                setVenueLimit(PAGE_SIZE)
+              }}
+            />
           </div>
+
+          {filteredVenues.length === 0 ? (
+            <p className="app__muted">該当する会場が見つかりません。</p>
+          ) : (
+            <>
+              <table className="master-table">
+                <thead>
+                  <tr>
+                    <th>名称</th>
+                    <th>種別</th>
+                    <th>地域</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {visibleVenues.map((venue) => (
+                    <tr key={venue.id}>
+                      <td>{venue.name}</td>
+                      <td>{optionLabel(venue.categoryLabel ?? venue.type ?? '', '未設定')}</td>
+                      <td>{optionLabel(venue.regionLabel ?? venue.region ?? '', '未設定')}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {filteredVenues.length > visibleVenues.length && (
+                <button
+                  className="master-more"
+                  onClick={() => setVenueLimit((prev) => prev + PAGE_SIZE)}
+                >
+                  他 {filteredVenues.length - visibleVenues.length} 件を表示
+                </button>
+              )}
+            </>
+          )}
         </div>
       )}
+
       {error && <p className="app__alert">{error}</p>}
     </section>
   )
