@@ -82,16 +82,27 @@ pnpm -v   # 10.x.x が表示されることを確認
 ## セットアップ概略
 
 1. **Firebase プロジェクトの準備**
-   - Firebase コンソールで新規プロジェクトを作成
-   - Authentication で Google サインインを有効化
-   - Firestore データベースを作成（ネイティブモード）
-   - Firebase Hosting を有効化（SPA 用にリライト設定を後で追加）
+   1. [Firebase コンソール](https://console.firebase.google.com/)で新規プロジェクトを作成（アナリティクスは任意）
+   2. 左メニュー「Authentication」→「Sign-in method」で **Google** を有効化
+   3. 「Firestore Database」→「データベースを作成」→ ネイティブモード / リージョン選択（例: `asia-northeast1`）
+   4. 「Hosting」→「使ってみる」→プロジェクトを選択して初期化
+   5. プロジェクト設定 →「全般」→「アプリを追加」で Web アプリを登録し、表示される `firebaseConfig` を控える
 2. **ローカル環境での開発**
    - `git clone` で本リポジトリを取得
    - `pnpm install`（ルートで実行）
    - Firebase Emulator Suite を使う場合は `firebase emulators:start --only auth,firestore` を実行
 3. **環境変数の設定**
-   - `apps/web/.env.local` に Firebase config（API キーなど）と Firestore 設定を記載
+   1. `apps/web/.env.local` を作成
+   2. Web アプリ登録時に表示された設定を以下の形式で記載
+
+      ```bash
+      VITE_FIREBASE_API_KEY=xxx
+      VITE_FIREBASE_AUTH_DOMAIN=xxx.firebaseapp.com
+      VITE_FIREBASE_PROJECT_ID=xxx
+      VITE_FIREBASE_STORAGE_BUCKET=xxx.appspot.com
+      VITE_FIREBASE_MESSAGING_SENDER_ID=xxx
+      VITE_FIREBASE_APP_ID=xxx
+      ```
 4. **デプロイ**
    - `firebase login`
    - `.firebaserc` の `your-project-id` を実プロジェクト ID に書き換え
