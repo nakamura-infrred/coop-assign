@@ -32,6 +32,8 @@ export interface Availability {
   date: IsoDateString
   slot: AvailabilitySlot
   note?: string
+  createdAt: IsoDateTimeString
+  createdBy: UserId
   updatedAt: IsoDateTimeString
   updatedBy: UserId
 }
