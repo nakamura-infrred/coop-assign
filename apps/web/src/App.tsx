@@ -1,6 +1,7 @@
 import type { AssignmentStatus, Task } from '@coop-assign/domain'
 import './App.css'
 import { TaskPreview } from './components/TaskPreview'
+import { MasterDataPreview } from './components/MasterDataPreview'
 import { CalendarBoard } from './components/CalendarBoard'
 import { useAuth } from './providers/AuthProvider'
 
@@ -107,6 +108,8 @@ function App() {
           <CalendarBoard />
 
           <TaskPreview />
+
+          <MasterDataPreview />
 
           <section className="app__section">
             <h2>これから実装する内容</h2>

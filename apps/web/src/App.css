@@ -189,6 +189,65 @@
   text-decoration: line-through;
 }
 
+.master-grid {
+  display: grid;
+  gap: 1.5rem;
+}
+
+@media (min-width: 900px) {
+  .master-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.master-grid__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.master-grid__header h3 {
+  margin: 0;
+}
+
+.master-grid__search {
+  border-radius: 0.6rem;
+  border: 1px solid rgba(15, 23, 42, 0.2);
+  padding: 0.45rem 0.75rem;
+  font-size: 0.9rem;
+  min-width: 12rem;
+}
+
+.master-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.6rem;
+}
+
+.master-list__item {
+  padding: 0.6rem 0.75rem;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  border-radius: 0.75rem;
+  background-color: rgba(255, 255, 255, 0.95);
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.master-list__item strong {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.master-list__meta {
+  color: #64748b;
+  font-size: 0.85rem;
+}
+
 .app__roadmap {
   list-style: none;
   margin: 0;

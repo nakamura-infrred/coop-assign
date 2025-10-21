@@ -3,7 +3,6 @@ import { promises as fs } from 'fs'
 import path from 'path'
 import process from 'process'
 import { fileURLToPath } from 'url'
-import slugify from 'slugify'
 import admin from 'firebase-admin'
 
 const __filename = fileURLToPath(import.meta.url)
@@ -21,13 +20,6 @@ const ensureProject = () => {
     process.exit(1)
   }
 }
-
-const slug = (value) =>
-  slugify(value, {
-    lower: true,
-    strict: true,
-    trim: true,
-  })
 
 const readJsonIfExists = async (filePath) => {
   try {
@@ -49,7 +41,7 @@ const initAdmin = () => {
   return admin.firestore()
 }
 
-const upsertCollection = async (db, collectionName, docs) => {
+const overwriteCollection = async (db, collectionName, docs) => {
   if (!Array.isArray(docs) || docs.length === 0) return
 
   const collectionRef = db
@@ -57,21 +49,26 @@ const upsertCollection = async (db, collectionName, docs) => {
     .doc(TENANT_ID)
     .collection(collectionName)
 
+  const existingDocs = await collectionRef.listDocuments()
+  if (existingDocs.length > 0) {
+    const deleteBatch = db.batch()
+    existingDocs.forEach((doc) => deleteBatch.delete(doc))
+    await deleteBatch.commit()
+  }
+
   const batch = db.batch()
 
   docs.forEach((doc) => {
-    const rawId = doc.id ?? doc.slug ?? doc.name
-    if (!rawId) {
+    if (!doc.id) {
       throw new Error(`Missing id for ${collectionName} entry: ${JSON.stringify(doc)}`)
     }
-    const docId = slug(String(rawId))
-    const { id, slug: _slug, ...rest } = doc
-    const ref = collectionRef.doc(docId)
+    const { id, ...rest } = doc
+    const ref = collectionRef.doc(id)
     batch.set(
       ref,
       {
         ...rest,
-        id: docId,
+        id,
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
       },
       { merge: true },
@@ -80,24 +77,6 @@ const upsertCollection = async (db, collectionName, docs) => {
 
   await batch.commit()
 }
-
-const normalizeVenue = (venue) => ({
-  id: venue.id ?? slug(venue.name),
-  name: venue.name,
-  type: venue.type ?? 'university',
-  region: venue.region ?? 'tokai',
-  address: venue.address ?? null,
-  note: venue.note ?? null,
-})
-
-const normalizeTeam = (team) => ({
-  id: team.id ?? slug(team.name),
-  name: team.name,
-  category: team.category ?? 'university',
-  region: team.region ?? 'tokai',
-  league: team.league ?? null,
-  shortName: team.shortName ?? null,
-})
 
 const main = async () => {
   ensureProject()
@@ -114,11 +93,11 @@ const main = async () => {
   const tasks = []
 
   if (venuesInput) {
-    tasks.push(upsertCollection(db, 'venues', venuesInput.map(normalizeVenue)))
+    tasks.push(overwriteCollection(db, 'venues', venuesInput))
   }
 
   if (teamsInput) {
-    tasks.push(upsertCollection(db, 'teams', teamsInput.map(normalizeTeam)))
+    tasks.push(overwriteCollection(db, 'teams', teamsInput))
   }
 
   await Promise.all(tasks)
