@@ -41,10 +41,8 @@ export function StorageProvider({ children }: PropsWithChildren) {
       }
     }
 
-    const tenantId =
-      ((import.meta.env.VITE_DEFAULT_TENANT_ID as string | undefined) ??
-        user.uid ??
-        null) as TenantId | null
+    const envTenant = (import.meta.env.VITE_DEFAULT_TENANT_ID as string | undefined)?.trim()
+    const tenantId = (envTenant && envTenant.length > 0 ? envTenant : 'default') as TenantId
     if (!tenantId) {
       return {
         adapter: null,
