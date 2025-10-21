@@ -7,6 +7,12 @@
   padding: 3rem 1.5rem 4rem;
 }
 
+.app--centered {
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
 .app__header {
   display: flex;
   flex-direction: column;
@@ -24,12 +30,34 @@
   letter-spacing: 0.04em;
 }
 
+.app__muted {
+  color: #64748b;
+  font-size: 0.95rem;
+  margin-top: 0.2rem;
+}
+
+.app__alert {
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  background-color: rgba(220, 38, 38, 0.12);
+  border: 1px solid rgba(220, 38, 38, 0.3);
+  color: #b91c1c;
+  font-weight: 600;
+}
+
 .app__section {
   background-color: #ffffff;
   border: 1px solid rgba(15, 23, 42, 0.12);
   border-radius: 1rem;
   padding: 1.75rem;
   box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+}
+
+.app__section--inline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
 }
 
 .app__section h2 {
@@ -55,4 +83,87 @@
   border-radius: 0.35rem;
   background: rgba(15, 23, 42, 0.08);
   font-size: 0.9rem;
+}
+
+.app__button {
+  padding: 0.65rem 1.4rem;
+  border-radius: 9999px;
+  border: none;
+  background: #2563eb;
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  box-shadow: 0 10px 25px rgba(37, 99, 235, 0.25);
+  transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease;
+}
+
+.app__button:hover {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+  box-shadow: 0 12px 28px rgba(37, 99, 235, 0.3);
+}
+
+.app__button:active {
+  transform: translateY(1px);
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.25);
+}
+
+.app__button--secondary {
+  background: #0f172a;
+  box-shadow: none;
+}
+
+.app__button--secondary:hover {
+  background: #1f2937;
+}
+
+.app__user {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.app__avatar {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 9999px;
+  object-fit: cover;
+  background-color: #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  color: #334155;
+}
+
+.app__avatar--placeholder {
+  font-size: 1.2rem;
+}
+
+.app__label {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #94a3b8;
+  margin-bottom: 0.25rem;
+}
+
+@media (max-width: 720px) {
+  .app {
+    padding: 2rem 1rem 3rem;
+  }
+
+  .app__section--inline {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .app__button {
+    width: 100%;
+  }
 }
