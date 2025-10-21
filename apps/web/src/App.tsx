@@ -1,8 +1,49 @@
+import type { AssignmentStatus, Task } from '@coop-assign/domain'
 import './App.css'
+import { TaskPreview } from './components/TaskPreview'
+import { CalendarBoard } from './components/CalendarBoard'
 import { useAuth } from './providers/AuthProvider'
 
 function App() {
   const { user, loading, error, signIn, signOut } = useAuth()
+
+  const roadmapItems: Array<{
+    title: string
+    description: string
+    statusTags: AssignmentStatus[]
+    scope: Pick<Task, 'title' | 'required'>
+  }> = [
+    {
+      title: 'Firestore 連携と Storage Adapter の実装',
+      description:
+        'タスク・担当情報を Firestore へ保存し、Firebase Security Rules と連動した共通 IF を整備します。',
+      statusTags: ['draft'],
+      scope: {
+        title: 'Firestore Adapter MVP',
+        required: 1,
+      },
+    },
+    {
+      title: 'FullCalendar でのカレンダー表示',
+      description:
+        '週／月ビューでタスクと可否オーバーレイを表示し、ドラッグ＆ドロップで割当を編集できるようにします。',
+      statusTags: ['draft'],
+      scope: {
+        title: 'Calendar Overlay',
+        required: 2,
+      },
+    },
+    {
+      title: 'ハード制約チェックと軽量フェアネス',
+      description:
+        'ダブルブッキングや可否不一致を即時検知し、担当偏りのメトリクスを表示して判断を補助します。',
+      statusTags: ['draft', 'confirmed'],
+      scope: {
+        title: 'Constraint Engine v1',
+        required: 3,
+      },
+    },
+  ]
 
   if (loading) {
     return (
@@ -63,13 +104,34 @@ function App() {
             </button>
           </section>
 
+          <CalendarBoard />
+
+          <TaskPreview />
+
           <section className="app__section">
             <h2>これから実装する内容</h2>
-            <ul>
-              <li>Firestore 上のタスク・担当情報を読み書きするアダプター</li>
-              <li>FullCalendar を用いた週／月ビューと可否オーバーレイ</li>
-              <li>割り当て編集時のハード制約チェック（重複／可否不一致）</li>
-              <li>変更履歴の保持とエクスポート（CSV／印刷）</li>
+            <ul className="app__roadmap">
+              {roadmapItems.map((item) => (
+                <li key={item.title} className="app__roadmap-item">
+                  <header>
+                    <h3>{item.title}</h3>
+                    <div className="app__pill-row">
+                      {item.statusTags.map((status) => (
+                        <span key={status} className={`app__pill app__pill--${status}`}>
+                          {status}
+                        </span>
+                      ))}
+                    </div>
+                  </header>
+                  <p>{item.description}</p>
+                  <footer>
+                    <span className="app__label">スコープ</span>
+                    <p className="app__muted">
+                      {item.scope.title}（担当者数の目安: {item.scope.required}）
+                    </p>
+                  </footer>
+                </li>
+              ))}
             </ul>
           </section>
         </>

@@ -102,6 +102,7 @@ pnpm -v   # 10.x.x が表示されることを確認
       VITE_FIREBASE_STORAGE_BUCKET=xxx.appspot.com
       VITE_FIREBASE_MESSAGING_SENDER_ID=xxx
       VITE_FIREBASE_APP_ID=xxx
+      VITE_DEFAULT_TENANT_ID=default        # 任意: Firestore 上の tenants/{tenantId} を固定したい場合
       ```
 4. **デプロイ**
    - `firebase login`
@@ -118,6 +119,18 @@ pnpm -v   # 10.x.x が表示されることを確認
 - `pnpm lint` : ワークスペース全体の Lint（`--if-present` で未導入パッケージはスキップ）
 - `pnpm test` : 将来的なテストコマンドの集合
 - `pnpm deploy` : ビルド後に `firebase deploy --config firebase.json --only hosting` を実行
+
+### ログイン後に確認できる内容
+
+- カレンダー（FullCalendar）でタスクを週／月表示
+- タスクプレビューのサンプルデータ追加／削除ボタン
+- Firestore に `tenants/{tenantId}/tasks` が生成され、リアルタイムに反映されます
+
+## Firestore データ構造メモ
+
+- データは `tenants/{tenantId}/` 配下に `persons` `availability` `tasks` `assignments` コレクションで保存します。
+- 初期データ投入はアプリの「タスクのプレビュー」からサンプルデータ投入ボタンで確認できます。
+- 開発中のセキュリティルールでは「認証済みユーザーであれば読み書き可」です。将来的に `tenantId` とロールに基づく制御へ強化します。
 
 ## 開発フローとバージョニング
 
