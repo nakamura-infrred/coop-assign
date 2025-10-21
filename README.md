@@ -128,6 +128,7 @@ pnpm -v   # 10.x.x が表示されることを確認
 - タスクプレビューで Firestore 上の試合データを一覧確認
 - Firestore に `tenants/{tenantId}/tasks` が生成され、リアルタイムに反映されます
 - チーム・会場などのマスタ投入は `pnpm seed:push` で Firestore に反映できます（詳細: `docs/firestore-seeds.md`）
+- マスターデータの閲覧仕様や今後の拡張方針は `docs/master-data-phase1.md` に整理しています
 
 ## Firestore データ構造メモ
 
