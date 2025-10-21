@@ -212,12 +212,80 @@
   margin: 0;
 }
 
+.master-filters {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  font-size: 0.85rem;
+}
+
+.master-filters label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  color: #475569;
+}
+
+.master-filters select {
+  border-radius: 0.6rem;
+  border: 1px solid rgba(15, 23, 42, 0.2);
+  padding: 0.35rem 0.6rem;
+  font-size: 0.9rem;
+  min-width: 9rem;
+}
+
 .master-grid__search {
   border-radius: 0.6rem;
   border: 1px solid rgba(15, 23, 42, 0.2);
   padding: 0.45rem 0.75rem;
   font-size: 0.9rem;
   min-width: 12rem;
+}
+
+.master-table {
+  width: 100%;
+  border-collapse: collapse;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  background-color: rgba(255, 255, 255, 0.95);
+}
+
+.master-table th,
+.master-table td {
+  padding: 0.6rem 0.75rem;
+  font-size: 0.88rem;
+  text-align: left;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.master-table thead {
+  background: rgba(226, 232, 240, 0.6);
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.master-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.master-table td {
+  color: #0f172a;
+  word-break: break-all;
+}
+
+.master-more {
+  margin-top: 0.6rem;
+  border: none;
+  background: none;
+  color: #2563eb;
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 0;
+}
+
+.master-more:hover {
+  text-decoration: underline;
 }
 
 .master-list {
@@ -396,5 +464,19 @@
 
   .task-list__item {
     grid-template-columns: 1fr;
+  }
+
+  .master-grid__header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .master-grid__search {
+    width: 100%;
+  }
+
+  .master-filters {
+    width: 100%;
   }
 }
