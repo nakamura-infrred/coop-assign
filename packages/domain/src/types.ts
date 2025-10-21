@@ -12,7 +12,7 @@ export type AvailabilitySlot = 'NONE' | 'AM' | 'PM' | 'FULL'
 
 export type AssignmentStatus = 'draft' | 'confirmed'
 
-export type RegionCode = 'tokai' | 'kansai' | 'hokuriku' | 'chubu' | 'other'
+export type RegionCode = string
 export type TeamCategory = 'university' | 'corporate' | 'club'
 export type VenueType = 'university' | 'stadium'
 
@@ -29,6 +29,12 @@ export interface Team {
   category: TeamCategory
   league?: string
   shortName?: string
+  leagueCode?: string
+  regionLabel?: string
+  primaryLabel?: string
+  slug?: string
+  sourcePath?: string
+  isActive?: boolean
 }
 
 export interface Venue {
@@ -38,6 +44,10 @@ export interface Venue {
   region: RegionCode
   address?: string
   note?: string
+  regionLabel?: string
+  categoryLabel?: string
+  slug?: string
+  isActive?: boolean
 }
 
 export interface Person {
