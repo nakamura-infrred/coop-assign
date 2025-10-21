@@ -10,6 +10,11 @@ import {
 } from 'react'
 import type { Task } from '@coop-assign/domain'
 import { useStorage } from './StorageProvider'
+import {
+  OPEN_AUGUST_2025_SEED_SOURCE,
+  sampleTasksAugust2025,
+  seededTaskIds,
+} from '../data/sampleTasks'
 
 interface TaskContextValue {
   tasks: Task[]
@@ -21,11 +26,6 @@ interface TaskContextValue {
 }
 
 const TaskContext = createContext<TaskContextValue | undefined>(undefined)
-
-const ISO_DAY_MS = 24 * 60 * 60 * 1000
-
-const addDays = (date: Date, days: number) => new Date(date.getTime() + ISO_DAY_MS * days)
-const toIsoDate = (date: Date) => date.toISOString().slice(0, 10)
 
 export function TaskProvider({ children }: PropsWithChildren) {
   const { adapter, tenantContext } = useStorage()
@@ -70,44 +70,25 @@ export function TaskProvider({ children }: PropsWithChildren) {
     setPending(true)
     setError(null)
     try {
-      const base = new Date()
-      const sample = [
-        {
-          title: '交流戦 第1試合',
-          venue: '中央体育館',
-          startTime: '09:00',
-          endTime: '10:30',
-          required: 2,
-          role: '主審',
-          date: toIsoDate(base),
-        },
-        {
-          title: '交流戦 第2試合',
-          venue: '中央体育館',
-          startTime: '11:00',
-          endTime: '12:30',
-          required: 2,
-          role: '副審',
-          date: toIsoDate(addDays(base, 1)),
-        },
-        {
-          title: '研修会サポート',
-          venue: '地域センター',
-          startTime: '14:00',
-          endTime: '16:00',
-          required: 3,
-          role: '運営補助',
-          date: toIsoDate(addDays(base, 3)),
-        },
-      ]
-
       await Promise.all(
-        sample.map((task) =>
-          adapter.upsertTask(tenantContext, {
+        sampleTasksAugust2025.map((task) => {
+          const baseMetadata = (task.metadata ?? {}) as Record<string, unknown>
+          const existingSeedSource =
+            typeof baseMetadata['seedSource'] === 'string'
+              ? (baseMetadata['seedSource'] as string)
+              : undefined
+
+          const metadata: Record<string, unknown> = {
+            ...baseMetadata,
+            seeded: true,
+            seedSource: existingSeedSource ?? OPEN_AUGUST_2025_SEED_SOURCE,
+          }
+
+          return adapter.upsertTask(tenantContext, {
             ...task,
-            metadata: { seeded: true },
-          }),
-        ),
+            metadata,
+          })
+        }),
       )
     } catch (err) {
       console.error('Failed to seed tasks', err)
@@ -122,7 +103,12 @@ export function TaskProvider({ children }: PropsWithChildren) {
     setPending(true)
     setError(null)
     try {
-      const seeded = tasks.filter((task) => task.metadata?.seeded)
+      const seeded = tasks.filter(
+        (task) =>
+          task.metadata?.seeded === true ||
+          task.metadata?.seedSource === OPEN_AUGUST_2025_SEED_SOURCE ||
+          seededTaskIds.has(task.id),
+      )
       await Promise.all(
         seeded.map((task) => adapter.removeTask(tenantContext, task.id)),
       )
@@ -134,9 +120,19 @@ export function TaskProvider({ children }: PropsWithChildren) {
     }
   }, [adapter, tenantContext, tasks])
 
+  const sortedTasks = useMemo(
+    () =>
+      [...tasks].sort((a, b) => {
+        const aKey = `${a.date} ${a.startTime ?? ''}`
+        const bKey = `${b.date} ${b.startTime ?? ''}`
+        return aKey.localeCompare(bKey)
+      }),
+    [tasks],
+  )
+
   const value = useMemo<TaskContextValue>(
-    () => ({ tasks, loading, error, pending, seedSampleTasks, clearSampleTasks }),
-    [tasks, loading, error, pending, seedSampleTasks, clearSampleTasks],
+    () => ({ tasks: sortedTasks, loading, error, pending, seedSampleTasks, clearSampleTasks }),
+    [sortedTasks, loading, error, pending, seedSampleTasks, clearSampleTasks],
   )
 
   return <TaskContext.Provider value={value}>{children}</TaskContext.Provider>

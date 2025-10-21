@@ -143,12 +143,57 @@
   font-size: 0.92rem;
 }
 
+.task-list__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+}
+
+.task-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.55rem;
+  border-radius: 9999px;
+  background: rgba(59, 130, 246, 0.12);
+  color: #1d4ed8;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.task-pill--cancelled {
+  background: rgba(220, 38, 38, 0.18);
+  color: #b91c1c;
+}
+
+.task-list__notes {
+  margin: 0.25rem 0 0;
+  color: #1e293b;
+  font-weight: 500;
+}
+
+.task-list__contact {
+  margin: 0.15rem 0 0;
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
 .calendar-wrapper {
   margin-top: 1.25rem;
 }
 
 .fc {
   font-family: 'Inter', 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+}
+
+.fc-event--cancelled,
+.fc .fc-event.fc-event--cancelled {
+  background-color: #94a3b8 !important;
+  border-color: #94a3b8 !important;
+  opacity: 0.75;
+  text-decoration: line-through;
 }
 
 .app__roadmap {
