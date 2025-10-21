@@ -1,0 +1,16 @@
+{
+  "name": "coop-assign",
+  "private": true,
+  "packageManager": "pnpm@10.18.3",
+  "type": "module",
+  "scripts": {
+    "dev": "pnpm --filter @coop-assign/web dev",
+    "build": "pnpm --filter @coop-assign/web build",
+    "lint": "pnpm --recursive --if-present run lint",
+    "test": "pnpm --recursive --if-present run test",
+    "deploy": "pnpm --filter @coop-assign/web build && firebase deploy --config firebase.json --only hosting"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
