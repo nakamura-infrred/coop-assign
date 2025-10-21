@@ -84,11 +84,34 @@ export function TaskPreview() {
                 </span>
               </div>
               <div className="task-list__body">
-                <h3>{task.title}</h3>
+                <div className="task-list__chips">
+                  {task.league && <span className="task-pill">{task.league}</span>}
+                  {task.status === 'cancelled' && (
+                    <span className="task-pill task-pill--cancelled">中止</span>
+                  )}
+                </div>
+                <h3>
+                  {task.hostTeamName ?? task.hostTeamId ?? '未設定'} vs{' '}
+                  {task.opponentTeamName ?? task.opponentTeamId ?? '未設定'}
+                </h3>
                 <p className="task-list__meta">
-                  会場: {task.venue ?? '未設定'} / 必要人数: {task.required} / ロール:{' '}
+                  会場: {task.venueName ?? task.venue ?? '未設定'} / 必要人数: {task.required}
+                  {' / 役割: '}
                   {task.role ?? '未設定'}
                 </p>
+                <p className="task-list__meta">
+                  所要時間: {task.durationMinutes ?? 180}分 / ID: {task.id}
+                </p>
+                {task.assignmentNotes && (
+                  <p className="task-list__notes">{task.assignmentNotes}</p>
+                )}
+                {task.contact?.name && (
+                  <p className="task-list__contact">
+                    連絡先: {task.contact.name}
+                    {task.contact.phone ? `（${task.contact.phone}）` : ''}
+                    {task.contact.notes ? ` / ${task.contact.notes}` : ''}
+                  </p>
+                )}
               </div>
             </li>
           ))}

@@ -12,6 +12,34 @@ export type AvailabilitySlot = 'NONE' | 'AM' | 'PM' | 'FULL'
 
 export type AssignmentStatus = 'draft' | 'confirmed'
 
+export type RegionCode = 'tokai' | 'kansai' | 'hokuriku' | 'chubu' | 'other'
+export type TeamCategory = 'university' | 'corporate' | 'club'
+export type VenueType = 'university' | 'stadium'
+
+export interface ContactInfo {
+  name: string
+  phone?: string
+  notes?: string
+}
+
+export interface Team {
+  id: string
+  name: string
+  region: RegionCode
+  category: TeamCategory
+  league?: string
+  shortName?: string
+}
+
+export interface Venue {
+  id: string
+  name: string
+  type: VenueType
+  region: RegionCode
+  address?: string
+  note?: string
+}
+
 export interface Person {
   id: PersonId
   tenantId: TenantId
@@ -45,10 +73,22 @@ export interface Task {
   startTime?: string // HH:mm
   endTime?: string // HH:mm
   venue?: string
+  venueId?: string
+  venueName?: string
   title: string
   required: number
   role?: string
   metadata?: Record<string, unknown>
+  league?: string
+  hostTeamId?: string
+  hostTeamName?: string
+  opponentTeamId?: string
+  opponentTeamName?: string
+  durationMinutes?: number
+  status?: 'scheduled' | 'cancelled' | 'postponed'
+  contact?: ContactInfo
+  assignmentNotes?: string
+  tags?: string[]
   createdAt: IsoDateTimeString
   createdBy: UserId
   updatedAt: IsoDateTimeString

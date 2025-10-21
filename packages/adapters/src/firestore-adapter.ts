@@ -326,28 +326,52 @@ export class FirestoreAdapter implements StorageAdapter {
   }
 
   async upsertTask(ctx: TenantContext, input: TaskWriteInput): Promise<Task> {
-    const payloadBase = {
-      date: toIsoDate(input.date),
-      startTime: input.startTime,
-      endTime: input.endTime,
-      venue: input.venue,
-      title: input.title,
-      required: input.required,
-      role: input.role,
-      metadata: input.metadata ?? {},
-      tenantId: ctx.tenantId,
-    }
-
     if (input.id) {
       const docRef = doc(this.tasksRef(ctx), input.id)
       const existingSnap = await getDoc(docRef)
       const existingData = existingSnap.exists()
         ? (existingSnap.data() as TaskDoc)
         : undefined
+
+      const updatePayload: Partial<TaskDoc> = {
+        date: toIsoDate(input.date),
+        startTime: input.startTime,
+        endTime: input.endTime,
+        venue: input.venue,
+        venueId: input.venueId ?? existingData?.venueId,
+        venueName: input.venueName ?? input.venue ?? existingData?.venueName,
+        title: input.title,
+        required: input.required,
+        role: input.role ?? existingData?.role,
+        league: input.league ?? existingData?.league,
+        hostTeamId: input.hostTeamId ?? existingData?.hostTeamId,
+        hostTeamName: input.hostTeamName ?? existingData?.hostTeamName,
+        opponentTeamId: input.opponentTeamId ?? existingData?.opponentTeamId,
+        opponentTeamName:
+          input.opponentTeamName ?? existingData?.opponentTeamName,
+        durationMinutes:
+          input.durationMinutes ?? existingData?.durationMinutes,
+        contact: input.contact ?? existingData?.contact,
+        assignmentNotes: input.assignmentNotes ?? existingData?.assignmentNotes,
+        tenantId: ctx.tenantId,
+      }
+
+      if (typeof input.status !== 'undefined') {
+        updatePayload.status = input.status
+      }
+
+      if (input.metadata) {
+        updatePayload.metadata = input.metadata
+      }
+
+      if (input.tags) {
+        updatePayload.tags = input.tags
+      }
+
       await setDoc(
         docRef,
         {
-          ...payloadBase,
+          ...updatePayload,
           ...this.auditFields(ctx, {
             createdAt: existingData?.createdAt,
             createdBy: existingData?.createdBy,
@@ -359,10 +383,32 @@ export class FirestoreAdapter implements StorageAdapter {
       return this.toTask(finalSnap, ctx.tenantId)
     }
 
-    const created = await addDoc(this.tasksRef(ctx), {
-      ...payloadBase,
+    const createdPayload: TaskDoc = {
+      date: toIsoDate(input.date),
+      startTime: input.startTime,
+      endTime: input.endTime,
+      venue: input.venue,
+      venueId: input.venueId,
+      venueName: input.venueName ?? input.venue,
+      title: input.title,
+      required: input.required,
+      role: input.role,
+      metadata: input.metadata ?? {},
+      league: input.league,
+      hostTeamId: input.hostTeamId,
+      hostTeamName: input.hostTeamName,
+      opponentTeamId: input.opponentTeamId,
+      opponentTeamName: input.opponentTeamName,
+      durationMinutes: input.durationMinutes,
+      status: input.status ?? 'scheduled',
+      contact: input.contact,
+      assignmentNotes: input.assignmentNotes,
+      tags: input.tags ?? [],
+      tenantId: ctx.tenantId,
       ...this.auditFields(ctx),
-    } as TaskDoc)
+    }
+
+    const created = await addDoc(this.tasksRef(ctx), createdPayload)
     const finalSnap = await getDoc(created)
     return this.toTask(finalSnap, ctx.tenantId)
   }
