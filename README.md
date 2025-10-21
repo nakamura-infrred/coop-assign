@@ -120,6 +120,12 @@ pnpm -v   # 10.x.x が表示されることを確認
 - `pnpm test` : 将来的なテストコマンドの集合
 - `pnpm deploy` : ビルド後に `firebase deploy --config firebase.json --only hosting` を実行
 
+### ログイン後に確認できる内容
+
+- カレンダー（FullCalendar）でタスクを週／月表示
+- タスクプレビューのサンプルデータ追加／削除ボタン
+- Firestore に `tenants/{tenantId}/tasks` が生成され、リアルタイムに反映されます
+
 ## Firestore データ構造メモ
 
 - データは `tenants/{tenantId}/` 配下に `persons` `availability` `tasks` `assignments` コレクションで保存します。

@@ -1,6 +1,7 @@
 import type { AssignmentStatus, Task } from '@coop-assign/domain'
 import './App.css'
 import { TaskPreview } from './components/TaskPreview'
+import { CalendarBoard } from './components/CalendarBoard'
 import { useAuth } from './providers/AuthProvider'
 
 function App() {
@@ -102,6 +103,8 @@ function App() {
               ログアウト
             </button>
           </section>
+
+          <CalendarBoard />
 
           <TaskPreview />
 
