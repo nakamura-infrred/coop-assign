@@ -9,6 +9,7 @@
     "lint": "pnpm --recursive --if-present run lint",
     "test": "pnpm --recursive --if-present run test",
     "deploy": "pnpm --filter @coop-assign/web build && firebase deploy --config firebase.json --only hosting",
+    "seed:prepare": "node scripts/prepare-seeds-from-team-place.mjs",
     "seed:push": "node scripts/push-firestore-seeds.mjs"
   },
   "engines": {
