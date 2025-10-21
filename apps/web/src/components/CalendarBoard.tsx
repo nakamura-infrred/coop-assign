@@ -47,7 +47,7 @@ export function CalendarBoard() {
         <div className="calendar-wrapper">
           <FullCalendar
             plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-            initialView="timeGridWeek"
+            initialView="dayGridMonth"
             headerToolbar={{
               start: 'prev,next today',
               center: 'title',
