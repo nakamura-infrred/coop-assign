@@ -10,6 +10,7 @@ service-account*.json
 # Env files
 .env
 .env.*
+.envrc
 apps/web/.env.local
 
 # Firebase / tooling
@@ -26,3 +27,6 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+
+#config local
+config/local/
