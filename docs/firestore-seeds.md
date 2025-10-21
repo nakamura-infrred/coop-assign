@@ -14,7 +14,7 @@
 pnpm seed:prepare
 ```
 
-生成後に内容をレビューし、必要に応じて手動で調整してください。
+生成後に内容をレビューし、必要に応じて手動で調整してください。ドキュメント ID は `名前 + カテゴリ + リージョン` から生成した 16 文字のハッシュで統一されます。
 
 ### venues.json
 
@@ -72,7 +72,7 @@ export SEED_TENANT_ID="default"   # 任意。省略時は default
 
 ```bash
 pnpm seed:prepare   # team_place.json から生成したい場合
-pnpm seed:push
+pnpm seed:push      # 既存データを削除して最新状態で upsert
 ```
 
 - `venues.json` / `teams.json` の内容が `tenants/{SEED_TENANT_ID}/venues` および `tenants/{SEED_TENANT_ID}/teams` に upsert されます。

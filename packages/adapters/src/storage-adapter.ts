@@ -8,8 +8,10 @@ import type {
   PersonId,
   Task,
   TaskId,
+  Team,
   TenantId,
   UserId,
+  Venue,
 } from '@coop-assign/domain'
 
 export type Unsubscribe = () => void
@@ -133,4 +135,7 @@ export interface StorageAdapter {
     query: AssignmentQuery,
     observer: CollectionObserver<Assignment>,
   ): Unsubscribe
+
+  listTeams(ctx: TenantContext): Promise<Team[]>
+  listVenues(ctx: TenantContext): Promise<Venue[]>
 }

@@ -23,12 +23,11 @@ const venueTypeMapping = [
   { match: ['球場', 'スタジアム'], value: 'stadium' },
 ]
 
-const slug = (value, fallback = 'unknown') => {
-  if (!value || typeof value !== 'string') return fallback
-  const basic = slugify(value, { lower: true, strict: true, trim: true })
-  if (basic) return basic
-  return createHash('sha1').update(value).digest('hex').slice(0, 16)
-}
+const createHashId = (...parts) =>
+  createHash('sha1').update(parts.filter(Boolean).join('::')).digest('hex').slice(0, 16)
+
+const slugLabel = (value) =>
+  slugify(value ?? '', { lower: true, strict: true, trim: true }) || null
 
 const resolveCategory = ({ primaryLabel, leagueLabel }) => {
   const labels = [primaryLabel, leagueLabel].filter(Boolean)
@@ -53,30 +52,39 @@ const resolveVenueType = (label) => {
 
 const normalizeTeam = ({ name, primaryLabel, leagueLabel, regionLabel, parentLabels }) => {
   const category = resolveCategory({ primaryLabel, leagueLabel })
+  const regionCode = slugLabel(regionLabel ?? 'unassigned') ?? 'unassigned'
+  const leagueCode = slugLabel(leagueLabel ?? '')
+
   return {
-    id: slug(name),
+    id: createHashId(name, category, regionLabel, leagueLabel),
     name,
     category,
-    region: slug(regionLabel ?? 'unassigned'),
+    region: regionCode,
     regionLabel: regionLabel ?? null,
     league: leagueLabel ?? null,
+    leagueCode,
     primaryLabel: primaryLabel ?? null,
+    slug: slugLabel(name),
     sourcePath: parentLabels.join(' > '),
     isActive: true,
   }
 }
 
-const normalizeVenue = ({ name, primaryLabel, regionLabel }) => ({
-  id: slug(name),
-  name,
-  type: resolveVenueType(primaryLabel ?? name),
-  region: slug(regionLabel ?? 'unassigned'),
-  regionLabel: regionLabel ?? null,
-  categoryLabel: primaryLabel ?? null,
-  address: null,
-  note: null,
-  isActive: true,
-})
+const normalizeVenue = ({ name, primaryLabel, regionLabel }) => {
+  const regionCode = slugLabel(regionLabel ?? 'unassigned') ?? 'unassigned'
+  return {
+    id: createHashId(name, primaryLabel, regionLabel),
+    name,
+    type: resolveVenueType(primaryLabel ?? name),
+    region: regionCode,
+    regionLabel: regionLabel ?? null,
+    categoryLabel: primaryLabel ?? null,
+    slug: slugLabel(name),
+    address: null,
+    note: null,
+    isActive: true,
+  }
+}
 
 const ensureArray = (value) => (Array.isArray(value) ? value : [])
 

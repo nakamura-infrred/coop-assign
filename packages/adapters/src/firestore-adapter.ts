@@ -24,8 +24,10 @@ import type {
   PersonId,
   Task,
   TaskId,
+  Team,
   TenantId,
   UserId,
+  Venue,
 } from '@coop-assign/domain'
 import type {
   AssignmentQuery,
@@ -52,15 +54,19 @@ type PersonDoc = Omit<Person, 'id'>
 type AvailabilityDoc = Omit<Availability, 'id'>
 type TaskDoc = Omit<Task, 'id'>
 type AssignmentDoc = Omit<Assignment, 'id'>
+type TeamDoc = Omit<Team, 'id'>
+type VenueDoc = Omit<Venue, 'id'>
 
 const collectionName: Record<
-  'persons' | 'availability' | 'tasks' | 'assignments',
+  'persons' | 'availability' | 'tasks' | 'assignments' | 'teams' | 'venues',
   string
 > = {
   persons: 'persons',
   availability: 'availability',
   tasks: 'tasks',
   assignments: 'assignments',
+  teams: 'teams',
+  venues: 'venues',
 }
 
 export class FirestoreAdapter implements StorageAdapter {
@@ -94,6 +100,14 @@ export class FirestoreAdapter implements StorageAdapter {
       ctx.tenantId,
       collectionName.assignments,
     )
+  }
+
+  private teamsRef(ctx: TenantContext) {
+    return collection(this.db, 'tenants', ctx.tenantId, collectionName.teams)
+  }
+
+  private venuesRef(ctx: TenantContext) {
+    return collection(this.db, 'tenants', ctx.tenantId, collectionName.venues)
   }
 
   private toPerson(
@@ -161,6 +175,32 @@ export class FirestoreAdapter implements StorageAdapter {
       ...data,
       id: snap.id,
       tenantId,
+    }
+  }
+
+  private toTeam(
+    snap: QueryDocumentSnapshot<DocumentData> | DocumentSnapshot<DocumentData>,
+  ): Team {
+    const data = snap.data() as TeamDoc | undefined
+    if (!data) {
+      throw new Error('Team document is missing data')
+    }
+    return {
+      ...data,
+      id: snap.id,
+    }
+  }
+
+  private toVenue(
+    snap: QueryDocumentSnapshot<DocumentData> | DocumentSnapshot<DocumentData>,
+  ): Venue {
+    const data = snap.data() as VenueDoc | undefined
+    if (!data) {
+      throw new Error('Venue document is missing data')
+    }
+    return {
+      ...data,
+      id: snap.id,
     }
   }
 
@@ -547,5 +587,19 @@ export class FirestoreAdapter implements StorageAdapter {
         console.error('Failed to observe assignments', error)
       },
     )
+  }
+
+  async listTeams(ctx: TenantContext): Promise<Team[]> {
+    const snapshot = await getDocs(this.teamsRef(ctx))
+    return snapshot.docs
+      .map((docSnap) => this.toTeam(docSnap))
+      .sort((a, b) => a.name.localeCompare(b.name, 'ja'))
+  }
+
+  async listVenues(ctx: TenantContext): Promise<Venue[]> {
+    const snapshot = await getDocs(this.venuesRef(ctx))
+    return snapshot.docs
+      .map((docSnap) => this.toVenue(docSnap))
+      .sort((a, b) => a.name.localeCompare(b.name, 'ja'))
   }
 }
