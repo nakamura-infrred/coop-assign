@@ -61,6 +61,8 @@
 
 > pnpm のワークスペース機能を使い、`apps/` と `packages/` を一元管理する前提です。`pnpm install` 後にバイナリビルドが必要と表示された場合は `pnpm approve-builds` を実行してください。
 
+ローカルのサービスアカウントや環境変数のセット方法は `docs/local-config.md` を参照してください。
+
 ### Node.js のバージョン切り替え例（nvm 利用）
 
 ```bash
