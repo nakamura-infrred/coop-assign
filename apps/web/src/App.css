@@ -74,13 +74,6 @@
   margin-bottom: 1.5rem;
 }
 
-.app__button-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.8rem;
-  align-items: center;
-}
-
 .app__section ul {
   margin: 0;
   padding-left: 1.1rem;

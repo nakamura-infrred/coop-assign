@@ -1,7 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import {
   createContext,
-  useCallback,
   useContext,
   useEffect,
   useMemo,
@@ -10,19 +9,11 @@ import {
 } from 'react'
 import type { Task } from '@coop-assign/domain'
 import { useStorage } from './StorageProvider'
-import {
-  OPEN_AUGUST_2025_SEED_SOURCE,
-  sampleTasksAugust2025,
-  seededTaskIds,
-} from '../data/sampleTasks'
 
 interface TaskContextValue {
   tasks: Task[]
   loading: boolean
   error: string | null
-  pending: boolean
-  seedSampleTasks: () => Promise<void>
-  clearSampleTasks: () => Promise<void>
 }
 
 const TaskContext = createContext<TaskContextValue | undefined>(undefined)
@@ -32,8 +23,6 @@ export function TaskProvider({ children }: PropsWithChildren) {
   const [tasks, setTasks] = useState<Task[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [pending, setPending] = useState(false)
-
   useEffect(() => {
     if (!adapter || !tenantContext) {
       setTasks([])
@@ -65,61 +54,6 @@ export function TaskProvider({ children }: PropsWithChildren) {
       })
   }, [adapter, tenantContext])
 
-  const seedSampleTasks = useCallback(async () => {
-    if (!adapter || !tenantContext) return
-    setPending(true)
-    setError(null)
-    try {
-      await Promise.all(
-        sampleTasksAugust2025.map((task) => {
-          const baseMetadata = (task.metadata ?? {}) as Record<string, unknown>
-          const existingSeedSource =
-            typeof baseMetadata['seedSource'] === 'string'
-              ? (baseMetadata['seedSource'] as string)
-              : undefined
-
-          const metadata: Record<string, unknown> = {
-            ...baseMetadata,
-            seeded: true,
-            seedSource: existingSeedSource ?? OPEN_AUGUST_2025_SEED_SOURCE,
-          }
-
-          return adapter.upsertTask(tenantContext, {
-            ...task,
-            metadata,
-          })
-        }),
-      )
-    } catch (err) {
-      console.error('Failed to seed tasks', err)
-      setError('サンプルデータの登録に失敗しました。')
-    } finally {
-      setPending(false)
-    }
-  }, [adapter, tenantContext])
-
-  const clearSampleTasks = useCallback(async () => {
-    if (!adapter || !tenantContext) return
-    setPending(true)
-    setError(null)
-    try {
-      const seeded = tasks.filter(
-        (task) =>
-          task.metadata?.seeded === true ||
-          task.metadata?.seedSource === OPEN_AUGUST_2025_SEED_SOURCE ||
-          seededTaskIds.has(task.id),
-      )
-      await Promise.all(
-        seeded.map((task) => adapter.removeTask(tenantContext, task.id)),
-      )
-    } catch (err) {
-      console.error('Failed to remove tasks', err)
-      setError('サンプルデータの削除に失敗しました。')
-    } finally {
-      setPending(false)
-    }
-  }, [adapter, tenantContext, tasks])
-
   const sortedTasks = useMemo(
     () =>
       [...tasks].sort((a, b) => {
@@ -131,8 +65,8 @@ export function TaskProvider({ children }: PropsWithChildren) {
   )
 
   const value = useMemo<TaskContextValue>(
-    () => ({ tasks: sortedTasks, loading, error, pending, seedSampleTasks, clearSampleTasks }),
-    [sortedTasks, loading, error, pending, seedSampleTasks, clearSampleTasks],
+    () => ({ tasks: sortedTasks, loading, error }),
+    [sortedTasks, loading, error],
   )
 
   return <TaskContext.Provider value={value}>{children}</TaskContext.Provider>

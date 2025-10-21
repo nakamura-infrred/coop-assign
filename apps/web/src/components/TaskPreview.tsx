@@ -15,8 +15,7 @@ const formatDisplayDate = (iso: string) => {
 
 export function TaskPreview() {
   const { adapter, tenantContext } = useStorage()
-  const { tasks, loading, error, pending, seedSampleTasks, clearSampleTasks } =
-    useTasks()
+  const { tasks, loading, error } = useTasks()
 
   const isReady = adapter && tenantContext
   const upcomingTasks = useMemo(
@@ -49,29 +48,16 @@ export function TaskPreview() {
             Firestore の `tasks` コレクションを購読し、割り当て予定を一覧表示します。
           </p>
         </div>
-        <div className="app__button-row">
-          <button
-            className="app__button"
-            onClick={() => void seedSampleTasks()}
-            disabled={!isReady || pending}
-          >
-            サンプルデータを投入
-          </button>
-          <button
-            className="app__button app__button--secondary"
-            onClick={() => void clearSampleTasks()}
-            disabled={!isReady || pending}
-          >
-            サンプルデータを削除
-          </button>
-        </div>
+        <p className="app__muted">
+          サンプルデータは Firestore 上で管理してください。ここでは読み込みのみ行います。
+        </p>
       </header>
 
       {loading ? (
         <p className="app__muted">読み込み中…</p>
       ) : upcomingTasks.length === 0 ? (
         <p className="app__muted">
-          登録されたタスクはまだありません。サンプルデータを投入するか、今後の実装で追加・編集を行います。
+          登録されたタスクはまだありません。Firestore 側で試合データを追加するとここに表示されます。
         </p>
       ) : (
         <ul className="task-list">
