@@ -1,5 +1,6 @@
 import type { AssignmentStatus, Task } from '@coop-assign/domain'
 import './App.css'
+import { TaskPreview } from './components/TaskPreview'
 import { useAuth } from './providers/AuthProvider'
 
 function App() {
@@ -101,6 +102,8 @@ function App() {
               ログアウト
             </button>
           </section>
+
+          <TaskPreview />
 
           <section className="app__section">
             <h2>これから実装する内容</h2>

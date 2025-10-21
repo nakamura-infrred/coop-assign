@@ -9,6 +9,13 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "baseUrl": ".",
+    "paths": {
+      "@coop-assign/domain": ["packages/domain/src/index.ts"],
+      "@coop-assign/domain/*": ["packages/domain/src/*"],
+      "@coop-assign/adapters": ["packages/adapters/src/index.ts"],
+      "@coop-assign/adapters/*": ["packages/adapters/src/*"]
+    }
   }
 }
