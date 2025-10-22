@@ -13,6 +13,7 @@ const TENANT_ID = process.env.SEED_TENANT_ID ?? 'default'
 const SEEDS_DIR = path.resolve('data/seeds')
 const VENUES_FILE = path.join(SEEDS_DIR, 'venues.json')
 const TEAMS_FILE = path.join(SEEDS_DIR, 'teams.json')
+const PERSONS_FILE = path.join(SEEDS_DIR, 'persons.json')
 
 const ensureProject = () => {
   if (!PROJECT_ID) {
@@ -83,9 +84,10 @@ const main = async () => {
 
   const venuesInput = await readJsonIfExists(VENUES_FILE)
   const teamsInput = await readJsonIfExists(TEAMS_FILE)
+  const personsInput = await readJsonIfExists(PERSONS_FILE)
 
-  if (!venuesInput && !teamsInput) {
-    console.error('data/seeds/ に venues.json または teams.json を配置してください。')
+  if (!venuesInput && !teamsInput && !personsInput) {
+    console.error('data/seeds/ に venues.json / teams.json / persons.json のいずれかを配置してください。')
     process.exit(1)
   }
 
@@ -98,6 +100,10 @@ const main = async () => {
 
   if (teamsInput) {
     tasks.push(overwriteCollection(db, 'teams', teamsInput))
+  }
+
+  if (personsInput) {
+    tasks.push(overwriteCollection(db, 'persons', personsInput))
   }
 
   await Promise.all(tasks)

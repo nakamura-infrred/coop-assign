@@ -29,7 +29,8 @@ config/
    export GOOGLE_APPLICATION_CREDENTIALS="$(pwd)/config/local/service-account-coop-assign.json"
    export SEED_TENANT_ID="default"
    ```
-3. 初回のみ `direnv allow` を実行すると、以降そのディレクトリに入るだけで環境変数が読み込まれます。
+3. 初回のみ `direnv allow` を実行すると、以降そのディレクトリに入るだけで環境変数が読み込まれます。  
+   Codex CLI など `direnv` が自動で動作しない実行環境では、コマンド実行前に `source .envrc` を明示的に実行してください。
 
 ### 2-2. `.env.local` を使う場合
 

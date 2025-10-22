@@ -1,15 +1,16 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { useMasterData } from '../providers/MasterDataProvider'
 
-type ViewMode = 'teams' | 'venues'
+type ViewMode = 'teams' | 'venues' | 'persons'
 const PAGE_SIZE = 20
+const GRADE_TAG_PREFIX = 'grade:'
 
 const normalize = (value: string) => value.toLocaleLowerCase('ja')
 const optionLabel = (value: string | null | undefined, fallback: string) =>
   value && value.trim().length > 0 ? value : fallback
 
 export function MasterDataPreview() {
-  const { teams, venues, loading, error } = useMasterData()
+  const { teams, venues, persons, loading, error } = useMasterData()
   const [viewMode, setViewMode] = useState<ViewMode>('teams')
 
   const [teamFilter, setTeamFilter] = useState('')
@@ -22,6 +23,19 @@ export function MasterDataPreview() {
   const [venueType, setVenueType] = useState('all')
   const [venueRegion, setVenueRegion] = useState('all')
   const [venueLimit, setVenueLimit] = useState(PAGE_SIZE)
+
+  const [personFilter, setPersonFilter] = useState('')
+  const [personGrade, setPersonGrade] = useState('all')
+  const [personLimit, setPersonLimit] = useState(PAGE_SIZE)
+
+  const getPersonGrade = useCallback((person: { tags?: string[] }) => {
+    const tag = person.tags?.find((value) => value.startsWith(GRADE_TAG_PREFIX))
+    if (!tag) {
+      return '未設定'
+    }
+    const grade = tag.slice(GRADE_TAG_PREFIX.length)
+    return grade.length > 0 ? grade : '未設定'
+  }, [])
 
   const teamCategories = useMemo(() => {
     const labels = new Set(
@@ -59,6 +73,16 @@ export function MasterDataPreview() {
     )
     return ['all', ...Array.from(labels).sort((a, b) => a.localeCompare(b, 'ja'))]
   }, [venues])
+
+  const personGrades = useMemo(() => {
+    const labels = new Set(
+      persons.map((person) => {
+        const grade = getPersonGrade(person)
+        return grade.length > 0 ? grade : '未設定'
+      }),
+    )
+    return ['all', ...Array.from(labels).sort((a, b) => a.localeCompare(b, 'ja'))]
+  }, [persons, getPersonGrade])
 
   const filteredTeams = useMemo(() => {
     const keyword = normalize(teamFilter.trim())
@@ -98,58 +122,57 @@ export function MasterDataPreview() {
     })
   }, [venueFilter, venues, venueType, venueRegion])
 
+  const filteredPersons = useMemo(() => {
+    const keyword = normalize(personFilter.trim())
+    return persons.filter((person) => {
+      const gradeLabel = getPersonGrade(person)
+      const noteLabel = optionLabel(person.note ?? '', '未設定')
+
+      const matchesGrade = personGrade === 'all' || gradeLabel === personGrade
+      const matchesKeyword =
+        keyword.length === 0
+          ? true
+          : normalize(
+              `${person.displayName}${gradeLabel}${noteLabel}${(person.tags ?? []).join('')}`,
+            ).includes(keyword)
+
+      return matchesGrade && matchesKeyword
+    })
+  }, [getPersonGrade, personFilter, personGrade, persons])
+
   const visibleTeams = filteredTeams.slice(0, teamLimit)
   const visibleVenues = filteredVenues.slice(0, venueLimit)
+  const visiblePersons = filteredPersons.slice(0, personLimit)
 
-  if (!loading && teams.length === 0 && venues.length === 0 && !error) {
+  if (!loading && teams.length === 0 && venues.length === 0 && persons.length === 0 && !error) {
     return (
       <section className="app__section">
         <h2>マスターデータ</h2>
-        <p className="app__muted">Firestore にチーム・会場データが登録されていません。</p>
+        <p className="app__muted">Firestore にチーム・会場・審判データが登録されていません。</p>
       </section>
     )
   }
 
-  return (
-    <section className="app__section">
-      <header className="master-grid__header master-grid__header--top">
-        <div>
-          <h2>マスターデータ</h2>
-          <p className="app__muted">
-            {viewMode === 'teams'
-              ? `${filteredTeams.length.toLocaleString()} / ${teams.length.toLocaleString()} 件`
-              : `${filteredVenues.length.toLocaleString()} / ${venues.length.toLocaleString()} 件`}
-          </p>
-        </div>
-        <div className="master-view-toggle">
-          <button
-            type="button"
-            className={
-              viewMode === 'teams'
-                ? 'master-view-toggle__button is-active'
-                : 'master-view-toggle__button'
-            }
-            onClick={() => setViewMode('teams')}
-          >
-            チーム
-          </button>
-          <button
-            type="button"
-            className={
-              viewMode === 'venues'
-                ? 'master-view-toggle__button is-active'
-                : 'master-view-toggle__button'
-            }
-            onClick={() => setViewMode('venues')}
-          >
-            会場
-          </button>
-        </div>
-      </header>
+  const summaryText = (() => {
+    switch (viewMode) {
+      case 'teams':
+        return `${filteredTeams.length.toLocaleString()} / ${teams.length.toLocaleString()} 件`
+      case 'venues':
+        return `${filteredVenues.length.toLocaleString()} / ${venues.length.toLocaleString()} 件`
+      case 'persons':
+        return `${filteredPersons.length.toLocaleString()} / ${persons.length.toLocaleString()} 件`
+      default:
+        return ''
+    }
+  })()
 
-      {loading ? (
-        <p className="app__muted">マスターデータを読み込んでいます…</p>
-      ) : viewMode === 'teams' ? (
+  const renderCurrentView = () => {
+    if (loading) {
+      return <p className="app__muted">マスターデータを読み込んでいます…</p>
+    }
+
+    if (viewMode === 'teams') {
+      return (
         <div className="master-panel">
           <div className="master-filters">
             <label>
@@ -247,7 +270,11 @@ export function MasterDataPreview() {
             </>
           )}
         </div>
-      ) : (
+      )
+    }
+
+    if (viewMode === 'venues') {
+      return (
         <div className="master-panel">
           <div className="master-filters">
             <label>
@@ -327,8 +354,121 @@ export function MasterDataPreview() {
             </>
           )}
         </div>
-      )}
+      )
+    }
 
+    return (
+      <div className="master-panel">
+        <div className="master-filters">
+          <label>
+            クラス
+            <select
+              value={personGrade}
+              onChange={(event) => {
+                setPersonGrade(event.target.value)
+                setPersonLimit(PAGE_SIZE)
+              }}
+            >
+              {personGrades.map((label) => (
+                <option key={label} value={label}>
+                  {label === 'all' ? 'すべて' : label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <input
+            className="master-grid__search"
+            type="search"
+            placeholder="氏名・備考で絞り込み"
+            value={personFilter}
+            onChange={(event) => {
+              setPersonFilter(event.target.value)
+              setPersonLimit(PAGE_SIZE)
+            }}
+          />
+        </div>
+
+        {filteredPersons.length === 0 ? (
+          <p className="app__muted">該当する審判が見つかりません。</p>
+        ) : (
+          <>
+            <table className="master-table">
+              <thead>
+                <tr>
+                  <th>氏名</th>
+                  <th>クラス</th>
+                  <th>備考</th>
+                </tr>
+              </thead>
+              <tbody>
+                {visiblePersons.map((person) => (
+                  <tr key={person.id}>
+                    <td>{person.displayName}</td>
+                    <td>{getPersonGrade(person)}</td>
+                    <td>{optionLabel(person.note ?? '', '未設定')}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {filteredPersons.length > visiblePersons.length && (
+              <button
+                className="master-more"
+                onClick={() => setPersonLimit((prev) => prev + PAGE_SIZE)}
+              >
+                他 {filteredPersons.length - visiblePersons.length} 件を表示
+              </button>
+            )}
+          </>
+        )}
+      </div>
+    )
+  }
+
+  return (
+    <section className="app__section">
+      <header className="master-grid__header master-grid__header--top">
+        <div>
+          <h2>マスターデータ</h2>
+          <p className="app__muted">{summaryText}</p>
+        </div>
+        <div className="master-view-toggle">
+          <button
+            type="button"
+            className={
+              viewMode === 'teams'
+                ? 'master-view-toggle__button is-active'
+                : 'master-view-toggle__button'
+            }
+            onClick={() => setViewMode('teams')}
+          >
+            チーム
+          </button>
+          <button
+            type="button"
+            className={
+              viewMode === 'venues'
+                ? 'master-view-toggle__button is-active'
+                : 'master-view-toggle__button'
+            }
+            onClick={() => setViewMode('venues')}
+          >
+            会場
+          </button>
+          <button
+            type="button"
+            className={
+              viewMode === 'persons'
+                ? 'master-view-toggle__button is-active'
+                : 'master-view-toggle__button'
+            }
+            onClick={() => setViewMode('persons')}
+          >
+            審判
+          </button>
+        </div>
+      </header>
+
+      {renderCurrentView()}
       {error && <p className="app__alert">{error}</p>}
     </section>
   )

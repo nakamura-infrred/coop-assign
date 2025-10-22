@@ -2,6 +2,9 @@
 
 このプロジェクトでは、大学・クラブチームや会場情報などのシードデータを Firestore 上で管理し、GitHub には含めません。以下の手順でローカルから Firestore へ投入できます。
 
+> ⚠️ 先に環境変数を設定してください  
+> `FIREBASE_PROJECT_ID`（対象プロジェクト ID）、`GOOGLE_APPLICATION_CREDENTIALS`（Firebase Admin SDK 用サービスアカウント JSON の絶対パス）、`SEED_TENANT_ID`（省略時 `default`）が未設定のまま `pnpm seed:push` を実行するとエラーになります。設定方法は本ドキュメントの「2. Firebase 認証情報を設定する」に記載しています。
+
 ## 1. シードファイルを準備する
 
 `data/seeds/` ディレクトリに以下の JSON ファイルを配置します（`.gitignore` 対象のためリポジトリには含まれません）。
@@ -71,6 +74,9 @@ export SEED_TENANT_ID="default"   # 任意。省略時は default
 ## 3. シードを Firestore に反映する
 
 ```bash
+# direnv を使っていないシェルでは、事前に環境変数を読み込む
+source .envrc 2>/dev/null || source .env.local 2>/dev/null || true
+
 pnpm seed:prepare   # team_place.json から生成したい場合
 pnpm seed:push      # 既存データを削除して最新状態で upsert
 ```
@@ -80,6 +86,7 @@ pnpm seed:push      # 既存データを削除して最新状態で upsert
 
 ## 補足
 
+- Codex CLI など `direnv` が自動で効かない環境では、コマンド実行前に `source .envrc`（または `.env.local`）を実行して環境変数を読み込んでください。
 - ファイル形式は JSON 配列を想定しています。CSV など他形式を使用する場合はJSONへ変換してください。
 - スクリプトは Firestore 以外を変更しませんが、念のため実行前にバックアップを取得することを推奨します。
 - 他テナントへ投入したい場合は `SEED_TENANT_ID` を切り替えて実行してください。

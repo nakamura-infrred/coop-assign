@@ -4,10 +4,17 @@ import path from 'path'
 import process from 'process'
 import slugify from 'slugify'
 import { createHash } from 'crypto'
+import xlsx from 'xlsx'
+
+const { readFile: readWorkbook, utils: xlsxUtils } = xlsx
 
 const SOURCE_FILE = path.resolve('data/seeds/team_place.json')
 const OUTPUT_TEAMS = path.resolve('data/seeds/teams.json')
 const OUTPUT_VENUES = path.resolve('data/seeds/venues.json')
+const PERSON_SOURCE = path.resolve('data/seeds/source/①審判情報.xlsx')
+const OUTPUT_PERSONS = path.resolve('data/seeds/persons.json')
+const PERSON_SEED_ACTOR = 'seed-script'
+const PERSON_SEED_TIMESTAMP = '2025-01-01T00:00:00.000Z'
 
 const categoryMapping = [
   { match: ['大学'], value: 'university' },
@@ -255,6 +262,71 @@ const dedupeById = (items) => {
   return Array.from(map.values())
 }
 
+const sanitizeString = (value) =>
+  typeof value === 'string' ? value.trim() : typeof value === 'number' ? `${value}`.trim() : ''
+
+const normalizeGrade = (value) => {
+  const raw = sanitizeString(value).toUpperCase()
+  if (!raw) return null
+  return raw.replace(/[^A-Z0-9]/g, '') || null
+}
+
+const extractPersonsFromWorkbook = () => {
+  let workbook
+  try {
+    workbook = readWorkbook(PERSON_SOURCE, { cellDates: false })
+  } catch (error) {
+    if (error && (error.code === 'ENOENT' || /no such file or directory/i.test(error.message))) {
+      console.warn(`審判情報ファイルが見つかりません: ${PERSON_SOURCE}`)
+      return []
+    }
+    throw error
+  }
+
+  const sheetName = workbook.SheetNames[0]
+  if (!sheetName) {
+    return []
+  }
+  const sheet = workbook.Sheets[sheetName]
+  const rows = xlsxUtils.sheet_to_json(sheet, { header: 1, raw: false, defval: '' })
+
+  const persons = []
+  rows.forEach((row) => {
+    const serial = sanitizeString(row[0])
+    if (!/^\d+$/.test(serial)) return
+
+    const displayName = sanitizeString(row[1])
+    if (!displayName) return
+
+    const address = sanitizeString(row[2])
+    const grade = normalizeGrade(row[3])
+    const id = createHashId('person', displayName)
+    const tags = []
+    if (grade) {
+      tags.push(`grade:${grade}`)
+    }
+
+    const person = {
+      id,
+      displayName,
+      tags,
+      skills: [],
+      createdAt: PERSON_SEED_TIMESTAMP,
+      createdBy: PERSON_SEED_ACTOR,
+      updatedAt: PERSON_SEED_TIMESTAMP,
+      updatedBy: PERSON_SEED_ACTOR,
+    }
+
+    if (address) {
+      person.note = address
+    }
+
+    persons.push(person)
+  })
+
+  return dedupeById(persons)
+}
+
 const main = async () => {
   const raw = await fs.readFile(SOURCE_FILE, 'utf8').catch((error) => {
     if (error.code === 'ENOENT') {
@@ -283,6 +355,15 @@ const main = async () => {
 
   await fs.writeFile(OUTPUT_TEAMS, JSON.stringify(teams, null, 2))
   await fs.writeFile(OUTPUT_VENUES, JSON.stringify(venues, null, 2))
+
+  const persons = extractPersonsFromWorkbook()
+  if (persons.length > 0) {
+    await fs.writeFile(OUTPUT_PERSONS, JSON.stringify(persons, null, 2))
+    console.log(`Generated persons (${persons.length}) -> ${OUTPUT_PERSONS}`)
+  } else {
+    await fs.rm(OUTPUT_PERSONS, { force: true })
+    console.log('審判データは生成されませんでした（ソースが存在しないか空です）。')
+  }
 
   console.log(`Generated teams (${teams.length}) -> ${OUTPUT_TEAMS}`)
   console.log(`Generated venues (${venues.length}) -> ${OUTPUT_VENUES}`)

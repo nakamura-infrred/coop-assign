@@ -1,11 +1,12 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useEffect, useState, type PropsWithChildren } from 'react'
-import type { Team, Venue } from '@coop-assign/domain'
+import type { Person, Team, Venue } from '@coop-assign/domain'
 import { useStorage } from './StorageProvider'
 
 interface MasterDataContextValue {
   teams: Team[]
   venues: Venue[]
+  persons: Person[]
   loading: boolean
   error: string | null
 }
@@ -16,6 +17,7 @@ export function MasterDataProvider({ children }: PropsWithChildren) {
   const { adapter, tenantContext } = useStorage()
   const [teams, setTeams] = useState<Team[]>([])
   const [venues, setVenues] = useState<Venue[]>([])
+  const [persons, setPersons] = useState<Person[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -23,6 +25,7 @@ export function MasterDataProvider({ children }: PropsWithChildren) {
     if (!adapter || !tenantContext) {
       setTeams([])
       setVenues([])
+      setPersons([])
       setLoading(false)
       return
     }
@@ -31,11 +34,16 @@ export function MasterDataProvider({ children }: PropsWithChildren) {
     setLoading(true)
     setError(null)
 
-    Promise.all([adapter.listTeams(tenantContext), adapter.listVenues(tenantContext)])
-      .then(([teamList, venueList]) => {
+    Promise.all([
+      adapter.listTeams(tenantContext),
+      adapter.listVenues(tenantContext),
+      adapter.listPersons(tenantContext),
+    ])
+      .then(([teamList, venueList, personList]) => {
         if (isCancelled) return
         setTeams(teamList)
         setVenues(venueList)
+        setPersons(personList)
         setLoading(false)
       })
       .catch((err) => {
@@ -51,7 +59,7 @@ export function MasterDataProvider({ children }: PropsWithChildren) {
   }, [adapter, tenantContext])
 
   return (
-    <MasterDataContext.Provider value={{ teams, venues, loading, error }}>
+    <MasterDataContext.Provider value={{ teams, venues, persons, loading, error }}>
       {children}
     </MasterDataContext.Provider>
   )
