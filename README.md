@@ -112,7 +112,7 @@ pnpm -v   # 10.x.x が表示されることを確認
    - `firebase use <your-project-id>`
    - `pnpm run deploy`（後続のスクリプトで `firebase deploy --only hosting,firestore` を呼び出す予定）
 
-詳細な手順や CLI スクリプトは、実装が進み次第 `docs/` と README を拡充していきます。
+詳細な手順や CLI スクリプトは、実装が進み次第 `docs/` と README を拡充していきます。開発フローの詳細は [`docs/contribution-guidelines.md`](docs/contribution-guidelines.md) を参照してください。
 
 ## 利用できる主要コマンド
 
