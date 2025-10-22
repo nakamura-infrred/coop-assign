@@ -184,10 +184,24 @@ export function AvailabilityPreview() {
           style={scaleStyle}
           data-scale={scaleData}
         >
-          <table className="availability__table">
+          <table
+            className={
+              variant === 'print'
+                ? 'availability__table availability__table--print'
+                : 'availability__table'
+            }
+          >
             <thead>
               <tr>
-                <th className="availability__name-col">審判</th>
+                <th
+                  className={
+                    variant === 'print'
+                      ? 'availability__name-col availability__name-col--print'
+                      : 'availability__name-col'
+                  }
+                >
+                  審判
+                </th>
                 {filteredDays.map((day) => (
                   <th
                     key={day.key}
@@ -259,7 +273,7 @@ export function AvailabilityPreview() {
     )
   }
 
-  return (
+  const screenContent = (
     <section className="app__section">
       <header className="availability__header">
         <div>
@@ -349,47 +363,54 @@ export function AvailabilityPreview() {
       </div>
 
       {renderTable('screen')}
-
-      {isPrintMode && (
-        <div className="availability-print-overlay" role="dialog" aria-modal="true">
-          <div className="availability-print-inner">
-            <header className="availability-print-header">
-              <div>
-                <h2>審判可用性 印刷レイアウト</h2>
-                <p className="app__muted">
-                  表示中のフィルタ・曜日設定で印刷プレビューを作成します。
-                </p>
-              </div>
-              <button
-                type="button"
-                className="availability-print-close"
-                onClick={() => setIsPrintMode(false)}
-              >
-                閉じる
-              </button>
-            </header>
-
-            <div className="availability-print-actions">
-              <button
-                type="button"
-                className="availability__nav"
-                onClick={() => window.print()}
-              >
-                印刷する
-              </button>
-              <button
-                type="button"
-                className="availability__nav availability__nav--secondary"
-                onClick={() => setIsPrintMode(false)}
-              >
-                キャンセル
-              </button>
-            </div>
-
-            {renderTable('print')}
-          </div>
-        </div>
-      )}
     </section>
+  )
+
+  const printOverlay = !isPrintMode ? null : (
+    <div className="availability-print-overlay" role="dialog" aria-modal="true">
+      <div className="availability-print-inner">
+        <header className="availability-print-header">
+          <div>
+            <h2>審判可用性 印刷レイアウト</h2>
+            <p className="app__muted">
+              表示中のフィルタ・曜日設定で印刷プレビューを作成します。
+            </p>
+          </div>
+          <button
+            type="button"
+            className="availability-print-close"
+            onClick={() => setIsPrintMode(false)}
+          >
+            閉じる
+          </button>
+        </header>
+
+        <div className="availability-print-actions">
+          <button
+            type="button"
+            className="availability__nav"
+            onClick={() => window.print()}
+          >
+            印刷する
+          </button>
+          <button
+            type="button"
+            className="availability__nav availability__nav--secondary"
+            onClick={() => setIsPrintMode(false)}
+          >
+            キャンセル
+          </button>
+        </div>
+
+        {renderTable('print')}
+      </div>
+    </div>
+  )
+
+  return (
+    <>
+      {screenContent}
+      {printOverlay}
+    </>
   )
 }
