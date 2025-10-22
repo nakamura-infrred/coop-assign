@@ -514,13 +514,78 @@
   text-align: center;
 }
 
+.availability__filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 0.9rem;
+  align-items: flex-end;
+}
+
+.availability__filters fieldset {
+  border: 1px solid rgba(15, 23, 42, 0.15);
+  border-radius: 0.75rem;
+  padding: 0.75rem 1rem;
+}
+
+.availability__filters legend {
+  padding: 0 0.5rem;
+  font-size: 0.85rem;
+  color: #475569;
+}
+
+.availability__weekday-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(3rem, auto));
+  gap: 0.35rem;
+}
+
+.availability__weekday-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  color: #334155;
+}
+
+.availability__holiday-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.9rem;
+  color: #1f2937;
+  padding: 0.35rem 0.65rem;
+  border-radius: 0.6rem;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+}
+
 .availability__legend {
   display: flex;
-  gap: 1.5rem;
+  gap: 1.25rem;
   flex-wrap: wrap;
   margin-bottom: 0.75rem;
   font-size: 0.9rem;
   color: #475569;
+}
+
+.availability__legend-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.availability__legend-chip--weekend {
+  background: rgba(59, 130, 246, 0.15);
+  color: #1d4ed8;
+}
+
+.availability__legend-chip--holiday {
+  background: rgba(239, 68, 68, 0.18);
+  color: #b91c1c;
 }
 
 .availability__table-wrapper {
@@ -542,7 +607,7 @@
   border: 1px solid rgba(15, 23, 42, 0.12);
   text-align: center;
   padding: 0.4rem 0.35rem;
-  min-width: 1.9rem;
+  min-width: 2.1rem;
 }
 
 .availability__table thead th {
@@ -556,8 +621,25 @@
 }
 
 .availability__table thead th small {
+  display: block;
   font-size: 0.75rem;
   color: #64748b;
+}
+
+.availability__header-cell--weekend {
+  background: rgba(59, 130, 246, 0.12);
+  color: #1d4ed8;
+}
+
+.availability__header-cell--holiday {
+  background: rgba(239, 68, 68, 0.12);
+  color: #b91c1c;
+}
+
+.availability__holiday-label {
+  font-size: 0.7rem;
+  color: #b91c1c;
+  margin-top: 0.15rem;
 }
 
 .availability__name-col {
@@ -565,14 +647,14 @@
   left: 0;
   background: #fff;
   z-index: 1;
-  min-width: 9rem;
+  min-width: 9.5rem;
 }
 
 .availability__name-cell {
   text-align: left;
   font-weight: 600;
   color: #0f172a;
-  min-width: 9rem;
+  min-width: 9.5rem;
 }
 
 .availability__cell {
@@ -591,13 +673,24 @@
   color: #d97706;
 }
 
-.availability__cell--× {
-  background: rgba(239, 68, 68, 0.18);
-  color: #b91c1c;
-}
-
 .availability__cell--empty {
   color: #0f172a;
+}
+
+.availability__cell--weekend {
+  position: relative;
+  background: rgba(59, 130, 246, 0.08);
+}
+
+.availability__cell--holiday {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.availability__empty {
+  text-align: center;
+  padding: 1.5rem;
+  color: #475569;
+  font-size: 0.95rem;
 }
 
 @media print {
@@ -605,14 +698,72 @@
     page-break-inside: avoid;
   }
 
-  .availability__header,
-  .availability__legend {
-    break-inside: avoid;
+  .availability__actions,
+  .availability__filters {
+    display: none !important;
   }
 
-  .availability__nav {
-    display: none;
+  .availability__table-wrapper {
+    box-shadow: none;
+    border: 1px solid #000;
   }
+}
+
+.availability__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.availability__actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.availability__nav {
+  border-radius: 9999px;
+  border: 1px solid rgba(59, 130, 246, 0.4);
+  background: #fff;
+  padding: 0.35rem 0.9rem;
+  font-size: 0.9rem;
+  color: #1d4ed8;
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+
+.availability__nav:hover {
+  background: rgba(59, 130, 246, 0.08);
+}
+
+.availability__nav--secondary {
+  border-color: rgba(15, 23, 42, 0.2);
+  color: #0f172a;
+}
+
+.availability__month {
+  min-width: 8rem;
+  text-align: center;
+}
+
+.availability__legend {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+  font-size: 0.9rem;
+  color: #475569;
+}
+
+.availability__table-wrapper {
+  overflow: auto;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 1rem;
+  background: #fff;
 }
 
 @media (max-width: 720px) {

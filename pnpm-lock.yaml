@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@holiday-jp/holiday_jp':
+        specifier: ^2.5.1
+        version: 2.5.1
       firebase-admin:
         specifier: ^12.5.0
         version: 12.7.0
@@ -597,6 +600,9 @@ packages:
     resolution: {integrity: sha512-rc1hOQtjIWGxcxpb9aHAfLpIctjEnsDehj0DAiVfBlmT84uvR0uUtN2hEi/ecvWVjXUGf5qPF4qEgiLOx1YIMQ==}
     engines: {node: '>=6'}
     hasBin: true
+
+  '@holiday-jp/holiday_jp@2.5.1':
+    resolution: {integrity: sha512-KuXfzsp0xlP830WDZRbsHj99wJzamx4fS55usUJFz+oHZmZ4gJfVdyiyv/rIWK+O7RgfHSi5j5Ajy0ZK/Vlnyg==}
 
   '@humanfs/core@0.19.1':
     resolution: {integrity: sha512-5DyQ4+1JEUzejeK1JGICcideyfUbGixgS9jNgex5nqkW+cY7WZhxBigmieN5Qnw9ZosSNVC9KQKyb+GUaGyKUA==}
@@ -2529,6 +2535,8 @@ snapshots:
       protobufjs: 7.5.4
       yargs: 17.7.2
     optional: true
+
+  '@holiday-jp/holiday_jp@2.5.1': {}
 
   '@humanfs/core@0.19.1': {}
 
