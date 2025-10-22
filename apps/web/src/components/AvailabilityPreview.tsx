@@ -20,8 +20,8 @@ type WeekdayKey = (typeof WEEKDAY_OPTIONS)[number]['key']
 
 const SCALE_OPTIONS = [
   { key: 'full' as const, label: '100%', value: 1 },
-  { key: 'dense' as const, label: '90%', value: 0.9 },
-  { key: 'compact' as const, label: '75%', value: 0.75 },
+  { key: 'dense' as const, label: '75%', value: 0.75 },
+  { key: 'compact' as const, label: '50%', value: 0.5 },
 ] as const
 
 const formatMonthLabel = (date: Date) =>
