@@ -1,3 +1,4 @@
+import { useMemo, useState } from 'react'
 import type { AssignmentStatus, Task } from '@coop-assign/domain'
 import './App.css'
 import { TaskPreview } from './components/TaskPreview'
@@ -6,8 +7,11 @@ import { CalendarBoard } from './components/CalendarBoard'
 import { AvailabilityPreview } from './components/AvailabilityPreview'
 import { useAuth } from './providers/AuthProvider'
 
+type MainTabKey = 'calendar' | 'tasks' | 'availability' | 'master' | 'roadmap'
+
 function App() {
   const { user, loading, error, signIn, signOut } = useAuth()
+  const [activeTab, setActiveTab] = useState<MainTabKey>('calendar')
 
   const roadmapItems: Array<{
     title: string
@@ -47,6 +51,69 @@ function App() {
     },
   ]
 
+  const tabItems = useMemo(
+    () => [
+      {
+        key: 'calendar' as const,
+        label: 'カレンダー',
+        component: <CalendarBoard />,
+      },
+      {
+        key: 'tasks' as const,
+        label: 'タスク一覧',
+        component: <TaskPreview />,
+      },
+      {
+        key: 'availability' as const,
+        label: '審判可用性',
+        component: <AvailabilityPreview />,
+      },
+      {
+        key: 'master' as const,
+        label: 'マスターデータ',
+        component: <MasterDataPreview />,
+      },
+      {
+        key: 'roadmap' as const,
+        label: 'ロードマップ',
+        component: (
+          <section className="app__section">
+            <h2>これから実装する内容</h2>
+            <ul className="app__roadmap">
+              {roadmapItems.map((item) => (
+                <li key={item.title} className="app__roadmap-item">
+                  <header>
+                    <h3>{item.title}</h3>
+                    <div className="app__pill-row">
+                      {item.statusTags.map((status) => (
+                        <span key={status} className={`app__pill app__pill--${status}`}>
+                          {status}
+                        </span>
+                      ))}
+                    </div>
+                  </header>
+                  <p>{item.description}</p>
+                  <footer>
+                    <span className="app__label">スコープ</span>
+                    <p className="app__muted">
+                      {item.scope.title}（担当者数の目安: {item.scope.required}）
+                    </p>
+                  </footer>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ),
+      },
+    ],
+    [roadmapItems],
+  )
+
+  const activeTabItem =
+    tabItems.find((item) => item.key === activeTab) ?? tabItems[0]
+
+  const isAvailabilityTabActive = user ? activeTab === 'availability' : false
+
   if (loading) {
     return (
       <main className="app app--centered">
@@ -57,7 +124,7 @@ function App() {
   }
 
   return (
-    <main className="app">
+    <main className={isAvailabilityTabActive ? 'app app--wide' : 'app'}>
       <header className="app__header">
         <span className="app__tag">Coop Assign</span>
         <h1>割り振り台帳の基礎をつくる MVP シェル</h1>
@@ -106,40 +173,24 @@ function App() {
             </button>
           </section>
 
-          <CalendarBoard />
+          <nav className="app__tabs" aria-label="機能セクション">
+            {tabItems.map((item) => (
+              <button
+                key={item.key}
+                type="button"
+                className={
+                  item.key === activeTab
+                    ? 'app__tab-button is-active'
+                    : 'app__tab-button'
+                }
+                onClick={() => setActiveTab(item.key)}
+              >
+                {item.label}
+              </button>
+            ))}
+          </nav>
 
-          <TaskPreview />
-
-          <AvailabilityPreview />
-
-          <MasterDataPreview />
-
-          <section className="app__section">
-            <h2>これから実装する内容</h2>
-            <ul className="app__roadmap">
-              {roadmapItems.map((item) => (
-                <li key={item.title} className="app__roadmap-item">
-                  <header>
-                    <h3>{item.title}</h3>
-                    <div className="app__pill-row">
-                      {item.statusTags.map((status) => (
-                        <span key={status} className={`app__pill app__pill--${status}`}>
-                          {status}
-                        </span>
-                      ))}
-                    </div>
-                  </header>
-                  <p>{item.description}</p>
-                  <footer>
-                    <span className="app__label">スコープ</span>
-                    <p className="app__muted">
-                      {item.scope.title}（担当者数の目安: {item.scope.required}）
-                    </p>
-                  </footer>
-                </li>
-              ))}
-            </ul>
-          </section>
+          <div className="app__tab-panel">{activeTabItem?.component}</div>
         </>
       )}
 
