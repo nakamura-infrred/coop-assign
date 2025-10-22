@@ -61,6 +61,8 @@
 
 > pnpm のワークスペース機能を使い、`apps/` と `packages/` を一元管理する前提です。`pnpm install` 後にバイナリビルドが必要と表示された場合は `pnpm approve-builds` を実行してください。
 
+ローカルのサービスアカウントや環境変数のセット方法は `docs/local-config.md` を参照してください。
+
 ### Node.js のバージョン切り替え例（nvm 利用）
 
 ```bash
@@ -123,13 +125,15 @@ pnpm -v   # 10.x.x が表示されることを確認
 ### ログイン後に確認できる内容
 
 - カレンダー（FullCalendar）でタスクを週／月表示
-- タスクプレビューのサンプルデータ追加／削除ボタン
+- タスクプレビューで Firestore 上の試合データを一覧確認
 - Firestore に `tenants/{tenantId}/tasks` が生成され、リアルタイムに反映されます
+- チーム・会場などのマスタ投入は `pnpm seed:push` で Firestore に反映できます（詳細: `docs/firestore-seeds.md`）
+- マスターデータの閲覧仕様や今後の拡張方針は `docs/master-data-phase1.md` に整理しています
 
 ## Firestore データ構造メモ
 
 - データは `tenants/{tenantId}/` 配下に `persons` `availability` `tasks` `assignments` コレクションで保存します。
-- 初期データ投入はアプリの「タスクのプレビュー」からサンプルデータ投入ボタンで確認できます。
+- 初期データ投入は Firestore に直接インポートまたは手動登録してください（本リポジトリにはサンプルデータを含めません）。
 - 開発中のセキュリティルールでは「認証済みユーザーであれば読み書き可」です。将来的に `tenantId` とロールに基づく制御へ強化します。
 
 ## 開発フローとバージョニング

@@ -21,13 +21,17 @@ export function CalendarBoard() {
     () =>
       tasks.map((task) => ({
         id: task.id,
-        title: `${task.title}（${task.required}名）`,
+        title: task.title,
         start: toDateTime(task.date, task.startTime ?? undefined),
         end: task.endTime ? toDateTime(task.date, task.endTime) : undefined,
         allDay: !task.startTime && !task.endTime,
+        classNames: task.status === 'cancelled' ? ['fc-event--cancelled'] : [],
         extendedProps: {
-          venue: task.venue,
+          venue: task.venueName ?? task.venue,
+          required: task.required,
           role: task.role,
+          status: task.status,
+          league: task.league,
         },
       })),
     [tasks],

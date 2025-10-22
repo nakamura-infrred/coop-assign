@@ -4,6 +4,7 @@ import './index.css'
 import { AuthProvider } from './providers/AuthProvider.tsx'
 import { StorageProvider } from './providers/StorageProvider.tsx'
 import { TaskProvider } from './providers/TaskProvider.tsx'
+import { MasterDataProvider } from './providers/MasterDataProvider.tsx'
 import App from './App.tsx'
 
 createRoot(document.getElementById('root')!).render(
@@ -11,7 +12,9 @@ createRoot(document.getElementById('root')!).render(
     <AuthProvider>
       <StorageProvider>
         <TaskProvider>
-          <App />
+          <MasterDataProvider>
+            <App />
+          </MasterDataProvider>
         </TaskProvider>
       </StorageProvider>
     </AuthProvider>

@@ -2,13 +2,16 @@ import type {
   Assignment,
   AssignmentId,
   Availability,
+  ContactInfo,
   IsoDateString,
   Person,
   PersonId,
   Task,
   TaskId,
+  Team,
   TenantId,
   UserId,
+  Venue,
 } from '@coop-assign/domain'
 
 export type Unsubscribe = () => void
@@ -55,11 +58,23 @@ export interface TaskWriteInput {
   date: IsoDateString
   startTime?: string
   endTime?: string
+  venueId?: string
+  venueName?: string
   venue?: string
   title: string
   required: number
   role?: string
   metadata?: Record<string, unknown>
+  league?: string
+  hostTeamId?: string
+  hostTeamName?: string
+  opponentTeamId?: string
+  opponentTeamName?: string
+  durationMinutes?: number
+  status?: 'scheduled' | 'cancelled' | 'postponed'
+  contact?: ContactInfo
+  assignmentNotes?: string
+  tags?: string[]
 }
 
 export interface AssignmentQuery {
@@ -120,4 +135,7 @@ export interface StorageAdapter {
     query: AssignmentQuery,
     observer: CollectionObserver<Assignment>,
   ): Unsubscribe
+
+  listTeams(ctx: TenantContext): Promise<Team[]>
+  listVenues(ctx: TenantContext): Promise<Venue[]>
 }

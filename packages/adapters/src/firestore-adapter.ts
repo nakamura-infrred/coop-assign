@@ -24,8 +24,10 @@ import type {
   PersonId,
   Task,
   TaskId,
+  Team,
   TenantId,
   UserId,
+  Venue,
 } from '@coop-assign/domain'
 import type {
   AssignmentQuery,
@@ -52,15 +54,19 @@ type PersonDoc = Omit<Person, 'id'>
 type AvailabilityDoc = Omit<Availability, 'id'>
 type TaskDoc = Omit<Task, 'id'>
 type AssignmentDoc = Omit<Assignment, 'id'>
+type TeamDoc = Omit<Team, 'id'>
+type VenueDoc = Omit<Venue, 'id'>
 
 const collectionName: Record<
-  'persons' | 'availability' | 'tasks' | 'assignments',
+  'persons' | 'availability' | 'tasks' | 'assignments' | 'teams' | 'venues',
   string
 > = {
   persons: 'persons',
   availability: 'availability',
   tasks: 'tasks',
   assignments: 'assignments',
+  teams: 'teams',
+  venues: 'venues',
 }
 
 export class FirestoreAdapter implements StorageAdapter {
@@ -94,6 +100,14 @@ export class FirestoreAdapter implements StorageAdapter {
       ctx.tenantId,
       collectionName.assignments,
     )
+  }
+
+  private teamsRef(ctx: TenantContext) {
+    return collection(this.db, 'tenants', ctx.tenantId, collectionName.teams)
+  }
+
+  private venuesRef(ctx: TenantContext) {
+    return collection(this.db, 'tenants', ctx.tenantId, collectionName.venues)
   }
 
   private toPerson(
@@ -161,6 +175,32 @@ export class FirestoreAdapter implements StorageAdapter {
       ...data,
       id: snap.id,
       tenantId,
+    }
+  }
+
+  private toTeam(
+    snap: QueryDocumentSnapshot<DocumentData> | DocumentSnapshot<DocumentData>,
+  ): Team {
+    const data = snap.data() as TeamDoc | undefined
+    if (!data) {
+      throw new Error('Team document is missing data')
+    }
+    return {
+      ...data,
+      id: snap.id,
+    }
+  }
+
+  private toVenue(
+    snap: QueryDocumentSnapshot<DocumentData> | DocumentSnapshot<DocumentData>,
+  ): Venue {
+    const data = snap.data() as VenueDoc | undefined
+    if (!data) {
+      throw new Error('Venue document is missing data')
+    }
+    return {
+      ...data,
+      id: snap.id,
     }
   }
 
@@ -326,28 +366,52 @@ export class FirestoreAdapter implements StorageAdapter {
   }
 
   async upsertTask(ctx: TenantContext, input: TaskWriteInput): Promise<Task> {
-    const payloadBase = {
-      date: toIsoDate(input.date),
-      startTime: input.startTime,
-      endTime: input.endTime,
-      venue: input.venue,
-      title: input.title,
-      required: input.required,
-      role: input.role,
-      metadata: input.metadata ?? {},
-      tenantId: ctx.tenantId,
-    }
-
     if (input.id) {
       const docRef = doc(this.tasksRef(ctx), input.id)
       const existingSnap = await getDoc(docRef)
       const existingData = existingSnap.exists()
         ? (existingSnap.data() as TaskDoc)
         : undefined
+
+      const updatePayload: Partial<TaskDoc> = {
+        date: toIsoDate(input.date),
+        startTime: input.startTime,
+        endTime: input.endTime,
+        venue: input.venue,
+        venueId: input.venueId ?? existingData?.venueId,
+        venueName: input.venueName ?? input.venue ?? existingData?.venueName,
+        title: input.title,
+        required: input.required,
+        role: input.role ?? existingData?.role,
+        league: input.league ?? existingData?.league,
+        hostTeamId: input.hostTeamId ?? existingData?.hostTeamId,
+        hostTeamName: input.hostTeamName ?? existingData?.hostTeamName,
+        opponentTeamId: input.opponentTeamId ?? existingData?.opponentTeamId,
+        opponentTeamName:
+          input.opponentTeamName ?? existingData?.opponentTeamName,
+        durationMinutes:
+          input.durationMinutes ?? existingData?.durationMinutes,
+        contact: input.contact ?? existingData?.contact,
+        assignmentNotes: input.assignmentNotes ?? existingData?.assignmentNotes,
+        tenantId: ctx.tenantId,
+      }
+
+      if (typeof input.status !== 'undefined') {
+        updatePayload.status = input.status
+      }
+
+      if (input.metadata) {
+        updatePayload.metadata = input.metadata
+      }
+
+      if (input.tags) {
+        updatePayload.tags = input.tags
+      }
+
       await setDoc(
         docRef,
         {
-          ...payloadBase,
+          ...updatePayload,
           ...this.auditFields(ctx, {
             createdAt: existingData?.createdAt,
             createdBy: existingData?.createdBy,
@@ -359,10 +423,32 @@ export class FirestoreAdapter implements StorageAdapter {
       return this.toTask(finalSnap, ctx.tenantId)
     }
 
-    const created = await addDoc(this.tasksRef(ctx), {
-      ...payloadBase,
+    const createdPayload: TaskDoc = {
+      date: toIsoDate(input.date),
+      startTime: input.startTime,
+      endTime: input.endTime,
+      venue: input.venue,
+      venueId: input.venueId,
+      venueName: input.venueName ?? input.venue,
+      title: input.title,
+      required: input.required,
+      role: input.role,
+      metadata: input.metadata ?? {},
+      league: input.league,
+      hostTeamId: input.hostTeamId,
+      hostTeamName: input.hostTeamName,
+      opponentTeamId: input.opponentTeamId,
+      opponentTeamName: input.opponentTeamName,
+      durationMinutes: input.durationMinutes,
+      status: input.status ?? 'scheduled',
+      contact: input.contact,
+      assignmentNotes: input.assignmentNotes,
+      tags: input.tags ?? [],
+      tenantId: ctx.tenantId,
       ...this.auditFields(ctx),
-    } as TaskDoc)
+    }
+
+    const created = await addDoc(this.tasksRef(ctx), createdPayload)
     const finalSnap = await getDoc(created)
     return this.toTask(finalSnap, ctx.tenantId)
   }
@@ -501,5 +587,19 @@ export class FirestoreAdapter implements StorageAdapter {
         console.error('Failed to observe assignments', error)
       },
     )
+  }
+
+  async listTeams(ctx: TenantContext): Promise<Team[]> {
+    const snapshot = await getDocs(this.teamsRef(ctx))
+    return snapshot.docs
+      .map((docSnap) => this.toTeam(docSnap))
+      .sort((a, b) => a.name.localeCompare(b.name, 'ja'))
+  }
+
+  async listVenues(ctx: TenantContext): Promise<Venue[]> {
+    const snapshot = await getDocs(this.venuesRef(ctx))
+    return snapshot.docs
+      .map((docSnap) => this.toVenue(docSnap))
+      .sort((a, b) => a.name.localeCompare(b.name, 'ja'))
   }
 }

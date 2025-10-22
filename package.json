@@ -8,9 +8,16 @@
     "build": "pnpm --filter @coop-assign/web build",
     "lint": "pnpm --recursive --if-present run lint",
     "test": "pnpm --recursive --if-present run test",
-    "deploy": "pnpm --filter @coop-assign/web build && firebase deploy --config firebase.json --only hosting"
+    "deploy": "pnpm --filter @coop-assign/web build && firebase deploy --config firebase.json --only hosting",
+    "seed:prepare": "node scripts/prepare-seeds-from-team-place.mjs",
+    "seed:push": "node scripts/push-firestore-seeds.mjs"
   },
   "engines": {
     "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.5.0",
+    "slugify": "^1.6.6",
+    "xlsx": "^0.18.5"
   }
 }
