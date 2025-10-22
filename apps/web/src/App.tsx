@@ -3,6 +3,7 @@ import './App.css'
 import { TaskPreview } from './components/TaskPreview'
 import { MasterDataPreview } from './components/MasterDataPreview'
 import { CalendarBoard } from './components/CalendarBoard'
+import { AvailabilityPreview } from './components/AvailabilityPreview'
 import { useAuth } from './providers/AuthProvider'
 
 function App() {
@@ -108,6 +109,8 @@ function App() {
           <CalendarBoard />
 
           <TaskPreview />
+
+          <AvailabilityPreview />
 
           <MasterDataPreview />
 

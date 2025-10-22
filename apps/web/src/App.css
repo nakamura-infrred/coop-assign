@@ -473,6 +473,148 @@
   margin-bottom: 0.25rem;
 }
 
+.availability__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.availability__actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.availability__nav {
+  border-radius: 9999px;
+  border: 1px solid rgba(59, 130, 246, 0.4);
+  background: #fff;
+  padding: 0.35rem 0.9rem;
+  font-size: 0.9rem;
+  color: #1d4ed8;
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+
+.availability__nav:hover {
+  background: rgba(59, 130, 246, 0.08);
+}
+
+.availability__nav--secondary {
+  border-color: rgba(15, 23, 42, 0.2);
+  color: #0f172a;
+}
+
+.availability__month {
+  min-width: 8rem;
+  text-align: center;
+}
+
+.availability__legend {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+  font-size: 0.9rem;
+  color: #475569;
+}
+
+.availability__table-wrapper {
+  overflow: auto;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 1rem;
+  background: #fff;
+}
+
+.availability__table {
+  width: max-content;
+  min-width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.availability__table th,
+.availability__table td {
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  text-align: center;
+  padding: 0.4rem 0.35rem;
+  min-width: 1.9rem;
+}
+
+.availability__table thead th {
+  background: rgba(99, 102, 241, 0.1);
+  font-weight: 600;
+}
+
+.availability__table thead th span {
+  display: block;
+  font-size: 0.95rem;
+}
+
+.availability__table thead th small {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.availability__name-col {
+  position: sticky;
+  left: 0;
+  background: #fff;
+  z-index: 1;
+  min-width: 9rem;
+}
+
+.availability__name-cell {
+  text-align: left;
+  font-weight: 600;
+  color: #0f172a;
+  min-width: 9rem;
+}
+
+.availability__cell {
+  cursor: pointer;
+  transition: background 100ms ease, color 100ms ease;
+  font-weight: 600;
+}
+
+.availability__cell--○ {
+  background: rgba(59, 130, 246, 0.12);
+  color: #2563eb;
+}
+
+.availability__cell--△ {
+  background: rgba(251, 191, 36, 0.2);
+  color: #d97706;
+}
+
+.availability__cell--× {
+  background: rgba(239, 68, 68, 0.18);
+  color: #b91c1c;
+}
+
+.availability__cell--empty {
+  color: #0f172a;
+}
+
+@media print {
+  .app__section {
+    page-break-inside: avoid;
+  }
+
+  .availability__header,
+  .availability__legend {
+    break-inside: avoid;
+  }
+
+  .availability__nav {
+    display: none;
+  }
+}
+
 @media (max-width: 720px) {
   .app {
     padding: 2rem 1rem 3rem;
