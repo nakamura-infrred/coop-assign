@@ -1,5 +1,6 @@
 import holidayJp from '@holiday-jp/holiday_jp'
 import { useEffect, useMemo, useState, type CSSProperties } from 'react'
+import { createPortal } from 'react-dom'
 import { useMasterData } from '../providers/MasterDataProvider'
 
 type CellStatus = '' | '○' | '△' | '▽'
@@ -366,46 +367,50 @@ export function AvailabilityPreview() {
     </section>
   )
 
-  const printOverlay = !isPrintMode ? null : (
-    <div className="availability-print-overlay" role="dialog" aria-modal="true">
-      <div className="availability-print-inner">
-        <header className="availability-print-header">
-          <div>
-            <h2>審判可用性 印刷レイアウト</h2>
-            <p className="app__muted">
-              表示中のフィルタ・曜日設定で印刷プレビューを作成します。
-            </p>
-          </div>
-          <button
-            type="button"
-            className="availability-print-close"
-            onClick={() => setIsPrintMode(false)}
-          >
-            閉じる
-          </button>
-        </header>
+  const printOverlay =
+    isPrintMode && typeof document !== 'undefined'
+      ? createPortal(
+          <div className="availability-print-overlay" role="dialog" aria-modal="true">
+            <div className="availability-print-inner">
+              <header className="availability-print-header">
+                <div>
+                  <h2>審判可用性 印刷レイアウト</h2>
+                  <p className="app__muted">
+                    表示中のフィルタ・曜日設定で印刷プレビューを作成します。
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  className="availability-print-close"
+                  onClick={() => setIsPrintMode(false)}
+                >
+                  閉じる
+                </button>
+              </header>
 
-        <div className="availability-print-actions">
-          <button
-            type="button"
-            className="availability__nav"
-            onClick={() => window.print()}
-          >
-            印刷する
-          </button>
-          <button
-            type="button"
-            className="availability__nav availability__nav--secondary"
-            onClick={() => setIsPrintMode(false)}
-          >
-            キャンセル
-          </button>
-        </div>
+              <div className="availability-print-actions">
+                <button
+                  type="button"
+                  className="availability__nav"
+                  onClick={() => window.print()}
+                >
+                  印刷する
+                </button>
+                <button
+                  type="button"
+                  className="availability__nav availability__nav--secondary"
+                  onClick={() => setIsPrintMode(false)}
+                >
+                  キャンセル
+                </button>
+              </div>
 
-        {renderTable('print')}
-      </div>
-    </div>
-  )
+              {renderTable('print')}
+            </div>
+          </div>,
+          document.body,
+        )
+      : null
 
   return (
     <>

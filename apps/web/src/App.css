@@ -863,10 +863,6 @@
   }
 
   body.availability-print-mode .app {
-    max-width: 100%;
-  }
-
-  body.availability-print-mode .app > *:not(.availability-print-overlay) {
     display: none !important;
   }
 
