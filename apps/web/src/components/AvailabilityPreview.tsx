@@ -2,9 +2,9 @@ import holidayJp from '@holiday-jp/holiday_jp'
 import { useMemo, useState } from 'react'
 import { useMasterData } from '../providers/MasterDataProvider'
 
-type CellStatus = '' | '○' | '△'
+type CellStatus = '' | '○' | '△' | '▽'
 
-const STATUS_ORDER: CellStatus[] = ['', '○', '△']
+const STATUS_ORDER: CellStatus[] = ['', '○', '△', '▽']
 
 const WEEKDAY_OPTIONS = [
   { key: 'mon', label: '月', jsDay: 1 },
@@ -174,7 +174,10 @@ export function AvailabilityPreview() {
           <strong>○</strong> : 終日可
         </span>
         <span>
-          <strong>△</strong> : 一部可
+          <strong>△</strong> : 午前可
+        </span>
+        <span>
+          <strong>▽</strong> : 午後可
         </span>
         <span className="availability__legend-chip availability__legend-chip--weekend">
           土日

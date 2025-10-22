@@ -673,6 +673,11 @@
   color: #d97706;
 }
 
+.availability__cell--▽ {
+  background: rgba(129, 140, 248, 0.18);
+  color: #4f46e5;
+}
+
 .availability__cell--empty {
   color: #0f172a;
 }
