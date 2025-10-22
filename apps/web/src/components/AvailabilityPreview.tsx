@@ -66,7 +66,7 @@ export function AvailabilityPreview() {
       return {
         key,
         dayNumber: index + 1,
-        weekday: holidayName ? '祝' : formatWeekday(date),
+        weekday: formatWeekday(date),
         weekdayKey: weekdayEntry,
         jsDay,
         isSunday,
