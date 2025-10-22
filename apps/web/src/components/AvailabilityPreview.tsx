@@ -65,7 +65,7 @@ export function AvailabilityPreview() {
       return {
         key,
         dayNumber: index + 1,
-        weekday: formatWeekday(date),
+        weekday: holidayName ? '祝' : formatWeekday(date),
         weekdayKey: weekdayEntry,
         jsDay,
         isWeekend: weekend,
@@ -204,9 +204,6 @@ export function AvailabilityPreview() {
                 >
                   <span>{day.dayNumber}</span>
                   <small>{day.weekday}</small>
-                  {day.isHoliday && (
-                    <small className="availability__holiday-label">{day.holidayName}</small>
-                  )}
                 </th>
               ))}
             </tr>
