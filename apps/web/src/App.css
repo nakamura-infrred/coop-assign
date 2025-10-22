@@ -559,6 +559,45 @@
   border: 1px solid rgba(15, 23, 42, 0.12);
 }
 
+.availability__scale-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.65rem;
+  border-radius: 0.6rem;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  background: rgba(248, 250, 252, 0.6);
+  font-size: 0.85rem;
+  color: #1f2937;
+}
+
+.availability__scale-buttons {
+  display: inline-flex;
+  gap: 0.4rem;
+}
+
+.availability__scale-button {
+  border: 1px solid rgba(15, 23, 42, 0.15);
+  border-radius: 9999px;
+  padding: 0.25rem 0.75rem;
+  background: #fff;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #1f2937;
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease, border 120ms ease;
+}
+
+.availability__scale-button:hover {
+  background: rgba(59, 130, 246, 0.08);
+}
+
+.availability__scale-button.is-active {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+  color: #fff;
+}
+
 .availability__legend {
   display: flex;
   gap: 1.25rem;
@@ -600,6 +639,10 @@
   min-width: 100%;
   border-collapse: collapse;
   font-size: 0.85rem;
+}
+
+.availability__table-scale {
+  transform-origin: top left;
 }
 
 .availability__table th,
@@ -706,6 +749,15 @@
   .availability__table-wrapper {
     box-shadow: none;
     border: 1px solid #000;
+  }
+
+  .availability__scale-control {
+    display: none !important;
+  }
+
+  .availability__table-scale {
+    transform: none !important;
+    width: 100% !important;
   }
 }
 

@@ -1,5 +1,5 @@
 import holidayJp from '@holiday-jp/holiday_jp'
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type CSSProperties } from 'react'
 import { useMasterData } from '../providers/MasterDataProvider'
 
 type CellStatus = '' | '○' | '△' | '▽'
@@ -17,6 +17,12 @@ const WEEKDAY_OPTIONS = [
 ] as const
 
 type WeekdayKey = (typeof WEEKDAY_OPTIONS)[number]['key']
+
+const SCALE_OPTIONS = [
+  { key: 'full' as const, label: '100%', value: 1 },
+  { key: 'dense' as const, label: '90%', value: 0.9 },
+  { key: 'compact' as const, label: '75%', value: 0.75 },
+] as const
 
 const formatMonthLabel = (date: Date) =>
   new Intl.DateTimeFormat('ja-JP', { year: 'numeric', month: 'long' }).format(date)
@@ -37,6 +43,8 @@ export function AvailabilityPreview() {
   const [cellStates, setCellStates] = useState<Record<string, CellStatus>>({})
   const [visibleWeekdays, setVisibleWeekdays] = useState<WeekdayKey[]>(['sat', 'sun'])
   const [includeHolidays, setIncludeHolidays] = useState(true)
+  const [scaleKey, setScaleKey] =
+    useState<(typeof SCALE_OPTIONS)[number]['key']>('dense')
 
   const weekdaySet = useMemo(() => new Set(visibleWeekdays), [visibleWeekdays])
 
@@ -93,6 +101,20 @@ export function AvailabilityPreview() {
       return nameA.localeCompare(nameB, 'ja')
     })
   }, [persons])
+
+  const scaleValue = useMemo(() => {
+    return SCALE_OPTIONS.find((option) => option.key === scaleKey)?.value ?? 1
+  }, [scaleKey])
+
+  const tableScaleStyle = useMemo(() => {
+    if (scaleValue === 1) return undefined
+    const scaledWidth = `${(1 / scaleValue) * 100}%`
+    return {
+      width: scaledWidth,
+      transform: `scale(${scaleValue})`,
+      transformOrigin: 'top left',
+    } satisfies CSSProperties
+  }, [scaleValue])
 
   const updateMonth = (offset: number) => {
     setAnchorMonth((prev) => new Date(prev.getFullYear(), prev.getMonth() + offset, 1))
@@ -169,6 +191,25 @@ export function AvailabilityPreview() {
           />
           祝日を表示
         </label>
+        <div className="availability__scale-control">
+          <span>表示倍率</span>
+          <div className="availability__scale-buttons">
+            {SCALE_OPTIONS.map((option) => (
+              <button
+                key={option.key}
+                type="button"
+                className={
+                  scaleKey === option.key
+                    ? 'availability__scale-button is-active'
+                    : 'availability__scale-button'
+                }
+                onClick={() => setScaleKey(option.key)}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       <div className="availability__legend">
@@ -190,7 +231,12 @@ export function AvailabilityPreview() {
       </div>
 
       <div className="availability__table-wrapper">
-        <table className="availability__table">
+        <div
+          className="availability__table-scale"
+          style={tableScaleStyle}
+          data-scale={scaleKey}
+        >
+          <table className="availability__table">
           <thead>
             <tr>
               <th className="availability__name-col">審判</th>
@@ -256,6 +302,7 @@ export function AvailabilityPreview() {
             )}
           </tbody>
         </table>
+        </div>
       </div>
     </section>
   )
