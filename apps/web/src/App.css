@@ -674,6 +674,12 @@
   background: #fff;
 }
 
+.availability__table-wrapper--print {
+  border: none;
+  box-shadow: none;
+  border-radius: 0.5rem;
+}
+
 .availability__table {
   width: max-content;
   min-width: 100%;
@@ -776,6 +782,57 @@
   font-size: 0.95rem;
 }
 
+.availability-print-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background: rgba(15, 23, 42, 0.75);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 2.5rem 1.5rem;
+  overflow: auto;
+}
+
+.availability-print-inner {
+  width: min(100%, 1000px);
+  background: #ffffff;
+  border-radius: 1.25rem;
+  padding: 2rem;
+  display: grid;
+  gap: 1.5rem;
+  box-shadow: 0 25px 55px rgba(15, 23, 42, 0.3);
+}
+
+.availability-print-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.availability-print-close {
+  border: none;
+  background: rgba(15, 23, 42, 0.08);
+  color: #0f172a;
+  border-radius: 9999px;
+  padding: 0.4rem 1.1rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+
+.availability-print-close:hover {
+  background: rgba(15, 23, 42, 0.15);
+}
+
+.availability-print-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
 @media print {
   .app__section {
     page-break-inside: avoid;
@@ -798,6 +855,32 @@
   .availability__table-scale {
     transform: none !important;
     width: 100% !important;
+  }
+
+  body.availability-print-mode .app {
+    max-width: 100%;
+  }
+
+  body.availability-print-mode .app > *:not(.availability-print-overlay) {
+    display: none !important;
+  }
+
+  body.availability-print-mode .availability-print-overlay {
+    position: static;
+    background: transparent;
+    padding: 0;
+    box-shadow: none;
+  }
+
+  body.availability-print-mode .availability-print-inner {
+    box-shadow: none;
+    padding: 0;
+    border-radius: 0;
+  }
+
+  body.availability-print-mode .availability-print-actions,
+  body.availability-print-mode .availability-print-close {
+    display: none !important;
   }
 }
 

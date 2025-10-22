@@ -1,5 +1,5 @@
 import holidayJp from '@holiday-jp/holiday_jp'
-import { useMemo, useState, type CSSProperties } from 'react'
+import { useEffect, useMemo, useState, type CSSProperties } from 'react'
 import { useMasterData } from '../providers/MasterDataProvider'
 
 type CellStatus = '' | '○' | '△' | '▽'
@@ -45,6 +45,7 @@ export function AvailabilityPreview() {
   const [includeHolidays, setIncludeHolidays] = useState(true)
   const [scaleKey, setScaleKey] =
     useState<(typeof SCALE_OPTIONS)[number]['key']>('dense')
+  const [isPrintMode, setIsPrintMode] = useState(false)
 
   const weekdaySet = useMemo(() => new Set(visibleWeekdays), [visibleWeekdays])
 
@@ -107,14 +108,15 @@ export function AvailabilityPreview() {
   }, [scaleKey])
 
   const tableScaleStyle = useMemo(() => {
-    if (scaleValue === 1) return undefined
-    const scaledWidth = `${(1 / scaleValue) * 100}%`
+    const effectiveScale = isPrintMode ? 1 : scaleValue
+    if (effectiveScale === 1) return undefined
+    const scaledWidth = `${(1 / effectiveScale) * 100}%`
     return {
       width: scaledWidth,
-      transform: `scale(${scaleValue})`,
+      transform: `scale(${effectiveScale})`,
       transformOrigin: 'top left',
     } satisfies CSSProperties
-  }, [scaleValue])
+  }, [scaleValue, isPrintMode])
 
   const updateMonth = (offset: number) => {
     setAnchorMonth((prev) => new Date(prev.getFullYear(), prev.getMonth() + offset, 1))
@@ -141,6 +143,122 @@ export function AvailabilityPreview() {
     }))
   }
 
+  useEffect(() => {
+    if (!isPrintMode) {
+      document.body.classList.remove('availability-print-mode')
+      return
+    }
+
+    const previousOverflow = document.body.style.overflow
+    document.body.classList.add('availability-print-mode')
+    document.body.style.overflow = 'hidden'
+
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsPrintMode(false)
+      }
+    }
+    window.addEventListener('keydown', handleKey)
+
+    return () => {
+      document.body.classList.remove('availability-print-mode')
+      document.body.style.overflow = previousOverflow
+      window.removeEventListener('keydown', handleKey)
+    }
+  }, [isPrintMode])
+
+  const renderTable = (variant: 'screen' | 'print') => {
+    const wrapperClass =
+      variant === 'print'
+        ? 'availability__table-wrapper availability__table-wrapper--print'
+        : 'availability__table-wrapper'
+
+    const scaleStyle = variant === 'screen' ? tableScaleStyle : undefined
+    const scaleData =
+      variant === 'screen' ? scaleKey : 'full'
+
+    return (
+      <div className={wrapperClass}>
+        <div
+          className="availability__table-scale"
+          style={scaleStyle}
+          data-scale={scaleData}
+        >
+          <table className="availability__table">
+            <thead>
+              <tr>
+                <th className="availability__name-col">審判</th>
+                {filteredDays.map((day) => (
+                  <th
+                    key={day.key}
+                    className={[
+                      day.isHoliday || day.isSunday ? 'availability__header-cell--holiday' : '',
+                      day.isSaturday ? 'availability__header-cell--saturday' : '',
+                    ]
+                      .filter(Boolean)
+                      .join(' ')}
+                  >
+                    <span>{day.dayNumber}</span>
+                    <small>{day.weekday}</small>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {filteredDays.length === 0 ? (
+                <tr>
+                  <td className="availability__empty" colSpan={filteredDays.length + 1}>
+                    表示したい曜日または祝日を選択してください。
+                  </td>
+                </tr>
+              ) : sortedPersons.length === 0 ? (
+                <tr>
+                  <td className="availability__empty" colSpan={filteredDays.length + 1}>
+                    審判マスタが登録されていません。
+                  </td>
+                </tr>
+              ) : (
+                sortedPersons.map((person) => (
+                  <tr key={person.id}>
+                    <th scope="row" className="availability__name-cell">
+                      {person.displayName}
+                    </th>
+                    {filteredDays.map((day) => {
+                      const key = toKey(person.id, day.key)
+                      const value = cellStates[key] ?? ''
+                      const classes = [
+                        'availability__cell',
+                        `availability__cell--${value || 'empty'}`,
+                        day.isHoliday || day.isSunday ? 'availability__cell--sunday' : '',
+                        day.isSaturday ? 'availability__cell--saturday' : '',
+                      ]
+                        .filter(Boolean)
+                        .join(' ')
+                      return (
+                        <td
+                          key={day.key}
+                          className={classes}
+                          onClick={
+                            variant === 'screen'
+                              ? () => toggleCell(person.id, day.key)
+                              : undefined
+                          }
+                          role={variant === 'screen' ? 'presentation' : undefined}
+                        >
+                          {value}
+                        </td>
+                      )
+                    })}
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <section className="app__section">
       <header className="availability__header">
@@ -159,10 +277,10 @@ export function AvailabilityPreview() {
             次の月
           </button>
           <button
-            onClick={() => window.print()}
+            onClick={() => setIsPrintMode(true)}
             className="availability__nav availability__nav--secondary"
           >
-            印刷プレビュー
+            印刷レイアウト
           </button>
         </div>
       </header>
@@ -230,80 +348,48 @@ export function AvailabilityPreview() {
         </span>
       </div>
 
-      <div className="availability__table-wrapper">
-        <div
-          className="availability__table-scale"
-          style={tableScaleStyle}
-          data-scale={scaleKey}
-        >
-          <table className="availability__table">
-          <thead>
-            <tr>
-              <th className="availability__name-col">審判</th>
-              {filteredDays.map((day) => (
-                <th
-                  key={day.key}
-                  className={[
-                    day.isHoliday || day.isSunday ? 'availability__header-cell--holiday' : '',
-                    day.isSaturday ? 'availability__header-cell--saturday' : '',
-                  ]
-                    .filter(Boolean)
-                    .join(' ')}
-                >
-                  <span>{day.dayNumber}</span>
-                  <small>{day.weekday}</small>
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {filteredDays.length === 0 ? (
-              <tr>
-                <td className="availability__empty" colSpan={filteredDays.length + 1}>
-                  表示したい曜日または祝日を選択してください。
-                </td>
-              </tr>
-            ) : sortedPersons.length === 0 ? (
-              <tr>
-                <td className="availability__empty" colSpan={filteredDays.length + 1}>
-                  審判マスタが登録されていません。
-                </td>
-              </tr>
-            ) : (
-              sortedPersons.map((person) => (
-                <tr key={person.id}>
-                  <th scope="row" className="availability__name-cell">
-                    {person.displayName}
-                  </th>
-                  {filteredDays.map((day) => {
-                    const key = toKey(person.id, day.key)
-                    const value = cellStates[key] ?? ''
-                    const classes = [
-                      'availability__cell',
-                      `availability__cell--${value || 'empty'}`,
-                      day.isHoliday || day.isSunday ? 'availability__cell--sunday' : '',
-                      day.isSaturday ? 'availability__cell--saturday' : '',
-                    ]
-                      .filter(Boolean)
-                      .join(' ')
-                    return (
-                      <td
-                        key={day.key}
-                        className={classes}
-                        onClick={() => toggleCell(person.id, day.key)}
-                        role="presentation"
-                      >
-                        {value}
-                      </td>
-                    )
-                  })}
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+      {renderTable('screen')}
+
+      {isPrintMode && (
+        <div className="availability-print-overlay" role="dialog" aria-modal="true">
+          <div className="availability-print-inner">
+            <header className="availability-print-header">
+              <div>
+                <h2>審判可用性 印刷レイアウト</h2>
+                <p className="app__muted">
+                  表示中のフィルタ・曜日設定で印刷プレビューを作成します。
+                </p>
+              </div>
+              <button
+                type="button"
+                className="availability-print-close"
+                onClick={() => setIsPrintMode(false)}
+              >
+                閉じる
+              </button>
+            </header>
+
+            <div className="availability-print-actions">
+              <button
+                type="button"
+                className="availability__nav"
+                onClick={() => window.print()}
+              >
+                印刷する
+              </button>
+              <button
+                type="button"
+                className="availability__nav availability__nav--secondary"
+                onClick={() => setIsPrintMode(false)}
+              >
+                キャンセル
+              </button>
+            </div>
+
+            {renderTable('print')}
+          </div>
         </div>
-      </div>
+      )}
     </section>
   )
 }
