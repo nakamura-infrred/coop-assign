@@ -60,7 +60,8 @@ export function AvailabilityPreview() {
       const weekdayEntry = (
         WEEKDAY_OPTIONS.find((option) => option.jsDay === jsDay)?.key ?? 'sun'
       ) as WeekdayKey
-      const weekend = jsDay === 0 || jsDay === 6
+      const isSunday = jsDay === 0
+      const isSaturday = jsDay === 6
       const holidayName = holidayMap.get(key)
       return {
         key,
@@ -68,7 +69,8 @@ export function AvailabilityPreview() {
         weekday: holidayName ? '祝' : formatWeekday(date),
         weekdayKey: weekdayEntry,
         jsDay,
-        isWeekend: weekend,
+        isSunday,
+        isSaturday,
         isHoliday: Boolean(holidayName),
         holidayName: holidayName ?? null,
       }
@@ -179,11 +181,11 @@ export function AvailabilityPreview() {
         <span>
           <strong>▽</strong> : 午後可
         </span>
-        <span className="availability__legend-chip availability__legend-chip--weekend">
-          土日
+        <span className="availability__legend-chip availability__legend-chip--saturday">
+          土
         </span>
         <span className="availability__legend-chip availability__legend-chip--holiday">
-          祝日
+          日・祝
         </span>
       </div>
 
@@ -196,8 +198,8 @@ export function AvailabilityPreview() {
                 <th
                   key={day.key}
                   className={[
-                    day.isWeekend ? 'availability__header-cell--weekend' : '',
-                    day.isHoliday ? 'availability__header-cell--holiday' : '',
+                    day.isHoliday || day.isSunday ? 'availability__header-cell--holiday' : '',
+                    day.isSaturday ? 'availability__header-cell--saturday' : '',
                   ]
                     .filter(Boolean)
                     .join(' ')}
@@ -230,12 +232,11 @@ export function AvailabilityPreview() {
                   {filteredDays.map((day) => {
                     const key = toKey(person.id, day.key)
                     const value = cellStates[key] ?? ''
-                    const isEmpty = value === ''
                     const classes = [
                       'availability__cell',
                       `availability__cell--${value || 'empty'}`,
-                      isEmpty && day.isWeekend ? 'availability__cell--weekend' : '',
-                      isEmpty && day.isHoliday ? 'availability__cell--holiday' : '',
+                      day.isHoliday || day.isSunday ? 'availability__cell--sunday' : '',
+                      day.isSaturday ? 'availability__cell--saturday' : '',
                     ]
                       .filter(Boolean)
                       .join(' ')

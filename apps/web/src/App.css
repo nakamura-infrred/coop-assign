@@ -578,7 +578,7 @@
   font-weight: 600;
 }
 
-.availability__legend-chip--weekend {
+.availability__legend-chip--saturday {
   background: rgba(59, 130, 246, 0.15);
   color: #1d4ed8;
 }
@@ -626,20 +626,14 @@
   color: #64748b;
 }
 
-.availability__header-cell--weekend {
-  background: rgba(239, 68, 68, 0.12);
-  color: #b91c1c;
-}
-
 .availability__header-cell--holiday {
   background: rgba(239, 68, 68, 0.12);
   color: #b91c1c;
 }
 
-.availability__holiday-label {
-  font-size: 0.7rem;
-  color: #b91c1c;
-  margin-top: 0.15rem;
+.availability__header-cell--saturday {
+  background: rgba(59, 130, 246, 0.12);
+  color: #1d4ed8;
 }
 
 .availability__name-col {
@@ -682,13 +676,14 @@
   color: #0f172a;
 }
 
-.availability__cell--weekend {
-  position: relative;
-  background: rgba(59, 130, 246, 0.08);
+.availability__cell--sunday:not(.availability__cell--○):not(.availability__cell--△):not(.availability__cell--▽) {
+  background: rgba(239, 68, 68, 0.12);
+  color: #b91c1c;
 }
 
-.availability__cell--holiday {
-  background: rgba(239, 68, 68, 0.1);
+.availability__cell--saturday:not(.availability__cell--○):not(.availability__cell--△):not(.availability__cell--▽) {
+  background: rgba(59, 130, 246, 0.1);
+  color: #1d4ed8;
 }
 
 .availability__empty {
