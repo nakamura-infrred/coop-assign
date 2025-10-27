@@ -27,6 +27,9 @@ import type {
   Team,
   TenantId,
   UserId,
+  UserProfile,
+  UserRole,
+  UserStatus,
   Venue,
 } from '@coop-assign/domain'
 import type {
@@ -41,6 +44,9 @@ import type {
   TaskWriteInput,
   TenantContext,
   Unsubscribe,
+  UserProfileWriteInput,
+  TeamWriteInput,
+  VenueWriteInput,
 } from './storage-adapter.js'
 
 const defaultAssignmentStatus: AssignmentStatus = 'draft'
@@ -56,11 +62,19 @@ type TaskDoc = Omit<Task, 'id'>
 type AssignmentDoc = Omit<Assignment, 'id'>
 type TeamDoc = Omit<Team, 'id'>
 type VenueDoc = Omit<Venue, 'id'>
+type UserProfileDoc = Omit<UserProfile, 'id'>
 
 const collectionName: Record<
-  'persons' | 'availability' | 'tasks' | 'assignments' | 'teams' | 'venues',
+  | 'userProfiles'
+  | 'persons'
+  | 'availability'
+  | 'tasks'
+  | 'assignments'
+  | 'teams'
+  | 'venues',
   string
 > = {
+  userProfiles: 'users',
   persons: 'persons',
   availability: 'availability',
   tasks: 'tasks',
@@ -74,6 +88,10 @@ export class FirestoreAdapter implements StorageAdapter {
 
   constructor(db: Firestore) {
     this.db = db
+  }
+
+  private userProfilesRef(ctx: TenantContext) {
+    return collection(this.db, 'tenants', ctx.tenantId, collectionName.userProfiles)
   }
 
   private personsRef(ctx: TenantContext) {
@@ -108,6 +126,135 @@ export class FirestoreAdapter implements StorageAdapter {
 
   private venuesRef(ctx: TenantContext) {
     return collection(this.db, 'tenants', ctx.tenantId, collectionName.venues)
+  }
+
+  private sanitizeString(input: string | undefined) {
+    if (typeof input === 'undefined') return undefined
+    const trimmed = input.trim()
+    return trimmed
+  }
+
+  private prepareTeamPayload(
+    input: TeamWriteInput,
+    existing?: TeamDoc,
+  ): Partial<TeamDoc> {
+    const payload: Partial<TeamDoc> = {}
+
+    if (typeof input.name !== 'undefined') {
+      const name = this.sanitizeString(input.name)
+      if (!name) {
+        throw new Error('チーム名を入力してください。')
+      }
+      payload.name = name
+    } else if (!existing) {
+      throw new Error('新規登録にはチーム名が必要です。')
+    }
+
+    if (typeof input.region !== 'undefined') {
+      payload.region = input.region
+    } else if (!existing) {
+      throw new Error('新規登録には地域コードが必要です。')
+    }
+
+    if (typeof input.category !== 'undefined') {
+      payload.category = input.category
+    } else if (!existing) {
+      throw new Error('新規登録にはカテゴリが必要です。')
+    }
+
+    if (typeof input.league !== 'undefined') {
+      payload.league = this.sanitizeString(input.league)
+    }
+    if (typeof input.shortName !== 'undefined') {
+      payload.shortName = this.sanitizeString(input.shortName)
+    }
+    if (typeof input.leagueCode !== 'undefined') {
+      payload.leagueCode = this.sanitizeString(input.leagueCode)
+    }
+    if (typeof input.regionLabel !== 'undefined') {
+      payload.regionLabel = this.sanitizeString(input.regionLabel)
+    }
+    if (typeof input.primaryLabel !== 'undefined') {
+      payload.primaryLabel = this.sanitizeString(input.primaryLabel)
+    }
+    if (typeof input.slug !== 'undefined') {
+      payload.slug = this.sanitizeString(input.slug)
+    }
+    if (typeof input.sourcePath !== 'undefined') {
+      payload.sourcePath = this.sanitizeString(input.sourcePath)
+    }
+    if (typeof input.isActive !== 'undefined') {
+      payload.isActive = input.isActive ?? undefined
+    }
+
+    return payload
+  }
+
+  private prepareVenuePayload(
+    input: VenueWriteInput,
+    existing?: VenueDoc,
+  ): Partial<VenueDoc> {
+    const payload: Partial<VenueDoc> = {}
+
+    if (typeof input.name !== 'undefined') {
+      const name = this.sanitizeString(input.name)
+      if (!name) {
+        throw new Error('会場名を入力してください。')
+      }
+      payload.name = name
+    } else if (!existing) {
+      throw new Error('新規登録には会場名が必要です。')
+    }
+
+    if (typeof input.type !== 'undefined') {
+      payload.type = input.type
+    } else if (!existing) {
+      throw new Error('新規登録には会場タイプが必要です。')
+    }
+
+    if (typeof input.region !== 'undefined') {
+      payload.region = input.region
+    } else if (!existing) {
+      throw new Error('新規登録には地域コードが必要です。')
+    }
+
+    if (typeof input.address !== 'undefined') {
+      payload.address = this.sanitizeString(input.address)
+    }
+    if (typeof input.note !== 'undefined') {
+      payload.note = this.sanitizeString(input.note)
+    }
+    if (typeof input.regionLabel !== 'undefined') {
+      payload.regionLabel = this.sanitizeString(input.regionLabel)
+    }
+    if (typeof input.categoryLabel !== 'undefined') {
+      payload.categoryLabel = this.sanitizeString(input.categoryLabel)
+    }
+    if (typeof input.slug !== 'undefined') {
+      payload.slug = this.sanitizeString(input.slug)
+    }
+    if (typeof input.isActive !== 'undefined') {
+      payload.isActive = input.isActive ?? undefined
+    }
+
+    return payload
+  }
+
+  private toUserProfile(
+    snap:
+      | QueryDocumentSnapshot<DocumentData>
+      | DocumentSnapshot<DocumentData>,
+    tenantId: TenantId,
+  ): UserProfile {
+    const data = snap.data() as UserProfileDoc | undefined
+    if (!data) {
+      throw new Error('User profile document is missing data')
+    }
+    return {
+      ...data,
+      id: snap.id,
+      tenantId,
+    }
   }
 
   private toPerson(
@@ -223,6 +370,139 @@ export class FirestoreAdapter implements StorageAdapter {
       updatedAt: now,
       updatedBy: ctx.actorId,
     }
+  }
+
+  async listUserProfiles(ctx: TenantContext): Promise<UserProfile[]> {
+    const snapshot = await getDocs(this.userProfilesRef(ctx))
+    return snapshot.docs
+      .map((docSnap) => this.toUserProfile(docSnap, ctx.tenantId))
+      .sort((a, b) => a.displayName.localeCompare(b.displayName, 'ja'))
+  }
+
+  async upsertUserProfile(
+    ctx: TenantContext,
+    input: UserProfileWriteInput,
+  ): Promise<UserProfile> {
+    const now = toIsoDateTime()
+
+    if (input.id) {
+      const docRef = doc(this.userProfilesRef(ctx), input.id)
+      const existingSnap = await getDoc(docRef)
+      const existingData = existingSnap.exists()
+        ? (existingSnap.data() as UserProfileDoc)
+        : undefined
+
+      const baseline: UserProfileDoc =
+        existingData ?? {
+          tenantId: ctx.tenantId,
+          email: '',
+          displayName: '',
+          photoURL: null,
+          role: 'viewer' satisfies UserRole,
+          status: 'active' satisfies UserStatus,
+          note: null,
+          createdAt: now,
+          createdBy: ctx.actorId,
+          updatedAt: now,
+          updatedBy: ctx.actorId,
+        }
+
+      const next: UserProfileDoc = {
+        tenantId: ctx.tenantId,
+        email:
+          typeof input.email === 'undefined'
+            ? baseline.email
+            : input.email ?? '',
+        displayName:
+          typeof input.displayName === 'undefined'
+            ? baseline.displayName
+            : input.displayName ??
+              input.email ??
+              baseline.email ??
+              '',
+        photoURL:
+          typeof input.photoURL === 'undefined'
+            ? baseline.photoURL ?? null
+            : input.photoURL ?? null,
+        role:
+          typeof input.role === 'undefined'
+            ? baseline.role
+            : input.role ?? baseline.role,
+        status:
+          typeof input.status === 'undefined'
+            ? baseline.status
+            : input.status ?? baseline.status,
+        note:
+          typeof input.note === 'undefined'
+            ? baseline.note ?? null
+            : input.note ?? null,
+        createdAt: baseline.createdAt ?? now,
+        createdBy: baseline.createdBy ?? ctx.actorId,
+        updatedAt: now,
+        updatedBy: ctx.actorId,
+      }
+
+      await setDoc(docRef, next, { merge: false })
+      const finalSnap = await getDoc(docRef)
+      return this.toUserProfile(finalSnap, ctx.tenantId)
+    }
+
+    const payload: UserProfileDoc = {
+      tenantId: ctx.tenantId,
+      email: input.email ?? '',
+      displayName: input.displayName ?? input.email ?? '未設定',
+      photoURL:
+        typeof input.photoURL === 'undefined' ? null : input.photoURL ?? null,
+      role: input.role ?? ('viewer' satisfies UserRole),
+      status: input.status ?? ('invited' satisfies UserStatus),
+      note: typeof input.note === 'undefined' ? null : input.note ?? null,
+      createdAt: now,
+      createdBy: ctx.actorId,
+      updatedAt: now,
+      updatedBy: ctx.actorId,
+    }
+
+    const created = await addDoc(this.userProfilesRef(ctx), payload)
+    const finalSnap = await getDoc(created)
+    return this.toUserProfile(finalSnap, ctx.tenantId)
+  }
+
+  async removeUserProfile(ctx: TenantContext, userId: UserId): Promise<void> {
+    await deleteDoc(doc(this.userProfilesRef(ctx), userId))
+  }
+
+  async upsertTeam(ctx: TenantContext, input: TeamWriteInput): Promise<Team> {
+    if (!input.id) {
+      throw new Error('チーム ID が指定されていません。')
+    }
+    const docRef = doc(this.teamsRef(ctx), input.id)
+    const existingSnap = await getDoc(docRef)
+    const existingData = existingSnap.exists()
+      ? (existingSnap.data() as TeamDoc)
+      : undefined
+    const payload = this.prepareTeamPayload(input, existingData)
+    await setDoc(docRef, payload, { merge: true })
+    const finalSnap = await getDoc(docRef)
+    return this.toTeam(finalSnap)
+  }
+
+  async removeTeam(ctx: TenantContext, teamId: Team['id']): Promise<void> {
+    await deleteDoc(doc(this.teamsRef(ctx), teamId))
+  }
+
+  async upsertVenue(ctx: TenantContext, input: VenueWriteInput): Promise<Venue> {
+    if (!input.id) {
+      throw new Error('会場 ID が指定されていません。')
+    }
+    const docRef = doc(this.venuesRef(ctx), input.id)
+    const existingSnap = await getDoc(docRef)
+    const existingData = existingSnap.exists()
+      ? (existingSnap.data() as VenueDoc)
+      : undefined
+    const payload = this.prepareVenuePayload(input, existingData)
+    await setDoc(docRef, payload, { merge: true })
+    const finalSnap = await getDoc(docRef)
+    return this.toVenue(finalSnap)
   }
 
   async listPersons(ctx: TenantContext): Promise<Person[]> {

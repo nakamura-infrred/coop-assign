@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import type { AssignmentStatus, Task } from '@coop-assign/domain'
 import './App.css'
 import { TaskPreview } from './components/TaskPreview'
@@ -6,12 +6,23 @@ import { MasterDataPreview } from './components/MasterDataPreview'
 import { CalendarBoard } from './components/CalendarBoard'
 import { AvailabilityPreview } from './components/AvailabilityPreview'
 import { useAuth } from './providers/AuthProvider'
+import { UserManagement } from './components/UserManagement'
 
-type MainTabKey = 'calendar' | 'tasks' | 'availability' | 'master' | 'roadmap'
+type MainTabKey =
+  | 'calendar'
+  | 'tasks'
+  | 'availability'
+  | 'master'
+  | 'users'
+  | 'roadmap'
 
 function App() {
   const { user, loading, error, signIn, signOut } = useAuth()
-  const [activeTab, setActiveTab] = useState<MainTabKey>('calendar')
+  const [activeTab, setActiveTab] = useState<MainTabKey>('roadmap')
+
+  useEffect(() => {
+    setActiveTab('roadmap')
+  }, [user])
 
   const roadmapItems: Array<{
     title: string
@@ -51,30 +62,34 @@ function App() {
     },
   ]
 
-  const tabItems = useMemo(
-    () => [
+  const tabItems = useMemo(() => {
+    const base: Array<{
+      key: MainTabKey
+      label: string
+      component: ReactNode
+    }> = [
       {
-        key: 'calendar' as const,
+        key: 'calendar',
         label: 'カレンダー',
         component: <CalendarBoard />,
       },
       {
-        key: 'tasks' as const,
+        key: 'tasks',
         label: 'タスク一覧',
         component: <TaskPreview />,
       },
       {
-        key: 'availability' as const,
+        key: 'availability',
         label: '審判可用性',
         component: <AvailabilityPreview />,
       },
       {
-        key: 'master' as const,
+        key: 'master',
         label: 'マスターデータ',
         component: <MasterDataPreview />,
       },
       {
-        key: 'roadmap' as const,
+        key: 'roadmap',
         label: 'ロードマップ',
         component: (
           <section className="app__section">
@@ -105,14 +120,25 @@ function App() {
           </section>
         ),
       },
-    ],
-    [roadmapItems],
-  )
+    ]
+
+    if (user) {
+      base.splice(4, 0, {
+        key: 'users',
+        label: 'ユーザー管理',
+        component: <UserManagement />,
+      })
+    }
+
+    return base
+  }, [roadmapItems, user])
 
   const activeTabItem =
     tabItems.find((item) => item.key === activeTab) ?? tabItems[0]
 
   const isAvailabilityTabActive = user ? activeTab === 'availability' : false
+
+  const roadmapTab = tabItems.find((item) => item.key === 'roadmap')
 
   if (loading) {
     return (
@@ -126,53 +152,39 @@ function App() {
   return (
     <main className={isAvailabilityTabActive ? 'app app--wide' : 'app'}>
       <header className="app__header">
-        <span className="app__tag">Coop Assign</span>
-        <h1>割り振り台帳の基礎をつくる MVP シェル</h1>
-        <p>
-          Firebase 認証と Firestore を組み合わせた共助型の割り振り台帳です。
-          現在は Google ログインとプレースホルダー UI が動作しています。
-        </p>
+        <div className="app__brand">
+          <span className="app__tag">Coop Assign</span>
+          <h1>{user ? '開発ロードマップ' : '共助カレンダーのプロトタイプ'}</h1>
+          <p className="app__muted">
+            {user
+              ? '現在の到達点と次に取り組む項目を一覧できます。'
+              : 'Google アカウントでログインして、進捗とカレンダーを確認しましょう。'}
+          </p>
+        </div>
+        {user ? (
+          <div className="app__auth-summary">
+            <div className="app__auth-info">
+              <strong>{user.displayName ?? user.email}</strong>
+              {user.email && <span>{user.email}</span>}
+            </div>
+            <button
+              className="app__button app__button--secondary"
+              onClick={() => void signOut()}
+            >
+              ログアウト
+            </button>
+          </div>
+        ) : (
+          <button className="app__button" onClick={() => void signIn()}>
+            Google でログイン
+          </button>
+        )}
       </header>
 
       {error && <p className="app__alert">{error}</p>}
 
-      {!user ? (
-        <section className="app__section">
-          <h2>ログインして始めましょう</h2>
-          <p>
-            Google アカウントでログインすると、カレンダーや割り振りデータにアクセスできる準備が整います。
-          </p>
-          <button className="app__button" onClick={() => void signIn()}>
-            Google でログイン
-          </button>
-        </section>
-      ) : (
+      {user ? (
         <>
-          <section className="app__section app__section--inline">
-            <div className="app__user">
-              {user.photoURL ? (
-                <img
-                  src={user.photoURL}
-                  alt={user.displayName ?? 'Google アバター'}
-                  className="app__avatar"
-                  referrerPolicy="no-referrer"
-                />
-              ) : (
-                <div className="app__avatar app__avatar--placeholder">
-                  {user.displayName?.slice(0, 1) ?? 'U'}
-                </div>
-              )}
-              <div>
-                <p className="app__label">ログイン中のユーザー</p>
-                <strong>{user.displayName ?? user.email}</strong>
-                {user.email && <p className="app__muted">{user.email}</p>}
-              </div>
-            </div>
-            <button className="app__button app__button--secondary" onClick={() => void signOut()}>
-              ログアウト
-            </button>
-          </section>
-
           <nav className="app__tabs" aria-label="機能セクション">
             {tabItems.map((item) => (
               <button
@@ -189,25 +201,11 @@ function App() {
               </button>
             ))}
           </nav>
-
           <div className="app__tab-panel">{activeTabItem?.component}</div>
         </>
+      ) : (
+        roadmapTab?.component
       )}
-
-      <section className="app__section">
-        <h2>開発用コマンド</h2>
-        <ul>
-          <li>
-            <code>pnpm dev</code> : ローカル開発サーバー（Vite）
-          </li>
-          <li>
-            <code>pnpm build</code> : 本番ビルド（`apps/web/dist` に出力）
-          </li>
-          <li>
-            <code>pnpm lint</code> : リポジトリ全体の Lint 実行
-          </li>
-        </ul>
-      </section>
     </main>
   )
 }
