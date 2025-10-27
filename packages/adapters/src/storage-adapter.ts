@@ -11,6 +11,9 @@ import type {
   Team,
   TenantId,
   UserId,
+  UserProfile,
+  UserRole,
+  UserStatus,
   Venue,
 } from '@coop-assign/domain'
 
@@ -95,9 +98,33 @@ export interface AssignmentWriteInput {
   note?: string
 }
 
+export interface UserProfileWriteInput {
+  id?: UserId
+  email?: string
+  displayName?: string
+  photoURL?: string | null
+  role?: UserRole
+  status?: UserStatus
+  note?: string | null
+}
+
+export type TeamWriteInput = Partial<Omit<Team, 'id'>> & { id: string }
+export type VenueWriteInput = Partial<Omit<Venue, 'id'>> & { id: string }
+
 export type CollectionObserver<T> = (items: T[]) => void
 
 export interface StorageAdapter {
+  listUserProfiles(ctx: TenantContext): Promise<UserProfile[]>
+  upsertUserProfile(
+    ctx: TenantContext,
+    input: UserProfileWriteInput,
+  ): Promise<UserProfile>
+  removeUserProfile(ctx: TenantContext, userId: UserId): Promise<void>
+
+  upsertTeam(ctx: TenantContext, input: TeamWriteInput): Promise<Team>
+  removeTeam(ctx: TenantContext, teamId: Team['id']): Promise<void>
+  upsertVenue(ctx: TenantContext, input: VenueWriteInput): Promise<Venue>
+
   listPersons(ctx: TenantContext): Promise<Person[]>
   upsertPerson(ctx: TenantContext, input: PersonWriteInput): Promise<Person>
   removePerson(ctx: TenantContext, personId: PersonId): Promise<void>

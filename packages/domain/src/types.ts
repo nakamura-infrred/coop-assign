@@ -22,6 +22,24 @@ export interface ContactInfo {
   notes?: string
 }
 
+export type UserRole = 'admin' | 'coordinator' | 'viewer'
+export type UserStatus = 'active' | 'invited' | 'suspended'
+
+export interface UserProfile {
+  id: UserId
+  tenantId: TenantId
+  email: string
+  displayName: string
+  photoURL?: string | null
+  role: UserRole
+  status: UserStatus
+  note?: string | null
+  createdAt: IsoDateTimeString
+  createdBy: UserId
+  updatedAt: IsoDateTimeString
+  updatedBy: UserId
+}
+
 export interface Team {
   id: string
   name: string
