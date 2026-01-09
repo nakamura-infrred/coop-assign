@@ -1,0 +1,40 @@
+# Cline Rules: Dev Ops (Vite) + Git Assistant
+
+## Primary Goals
+- Run/restart local dev server (Vite) and run checks (lint/test/typecheck).
+- Summarize git changes, create commit messages, commit and push safely.
+
+## Allowed Commands (preferred)
+- pnpm install
+- pnpm -C apps/web dev
+- pnpm -C apps/web build
+- pnpm lint
+- pnpm test
+- pnpm typecheck
+- git status
+- git diff
+- git add -A
+- git commit -m "<message>"
+- git push
+
+## Process management (safe)
+- To restart Vite:
+  1) If a dev server is already running in the Cline terminal, stop it with Ctrl+C.
+  2) If not, find only the Vite process for THIS repo and stop it cautiously.
+  - Prefer: lsof -i :5173 OR ps + grep vite
+  - Never kill broad processes. Show the exact PID and command line before killing.
+  - Ask for confirmation before any kill command.
+
+## Git safety
+- Never commit or push .env files or secrets.
+- Always run git status before commit.
+- Never push without explicit user confirmation ("pushして").
+
+## Style
+- Keep outputs short.
+- If something is unclear (which app/port), ask one question or inspect package.json scripts.
+
+## Language
+- Always respond in Japanese (日本語で回答する).
+- Do not switch to English unless I explicitly request it.
+- Commands/output may be in English; summarize results in Japanese.
