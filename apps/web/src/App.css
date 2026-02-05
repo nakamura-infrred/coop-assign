@@ -1001,9 +1001,24 @@
   color: #1d4ed8;
 }
 
-.availability__name-col {
+.availability__index-col {
   position: sticky;
   left: 0;
+  background: #fff;
+  z-index: 2;
+  min-width: 3rem;
+}
+
+.availability__index-cell {
+  background: #fff;
+  font-weight: 600;
+  color: #475569;
+  min-width: 3rem;
+}
+
+.availability__name-col {
+  position: sticky;
+  left: 3rem;
   background: #fff;
   z-index: 1;
   min-width: 9.5rem;
@@ -1014,6 +1029,37 @@
   font-weight: 600;
   color: #0f172a;
   min-width: 9.5rem;
+}
+
+.availability__name-row {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  justify-content: space-between;
+}
+
+.availability__name-label {
+  flex: 1;
+}
+
+.availability__order-controls {
+  display: inline-flex;
+  gap: 0.2rem;
+}
+
+.availability__order-button {
+  border: 1px solid rgba(15, 23, 42, 0.15);
+  background: #f8fafc;
+  color: #0f172a;
+  border-radius: 0.4rem;
+  padding: 0.05rem 0.3rem;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.availability__order-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .availability__cell {
@@ -1308,7 +1354,15 @@
   padding: 0.3rem 0.25rem;
 }
 
+.availability__index-col--print {
+  min-width: 2.5rem;
+}
+
 .availability__name-col--print {
   min-width: 7.5rem;
   font-size: 0.8rem;
+}
+
+.availability__table--print .availability__order-controls {
+  display: none;
 }

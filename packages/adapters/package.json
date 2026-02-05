@@ -7,6 +7,7 @@
   "types": "./src/index.ts",
   "sideEffects": false,
   "dependencies": {
-    "@coop-assign/domain": "workspace:*"
+    "@coop-assign/domain": "workspace:*",
+    "firebase": "^12.4.0"
   }
 }

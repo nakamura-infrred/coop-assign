@@ -104,6 +104,25 @@ export function AvailabilityPreview() {
     })
   }, [persons])
 
+  const [personOrder, setPersonOrder] = useState<string[]>([])
+
+  useEffect(() => {
+    const sortedIds = sortedPersons.map((person) => person.id)
+    setPersonOrder((prev) => {
+      if (prev.length === 0) return sortedIds
+      const next = prev.filter((id) => sortedIds.includes(id))
+      const missing = sortedIds.filter((id) => !next.includes(id))
+      return [...next, ...missing]
+    })
+  }, [sortedPersons])
+
+  const orderedPersons = useMemo(() => {
+    const personMap = new Map(sortedPersons.map((person) => [person.id, person]))
+    return personOrder
+      .map((id) => personMap.get(id))
+      .filter((person): person is NonNullable<typeof person> => Boolean(person))
+  }, [personOrder, sortedPersons])
+
   const scaleValue = useMemo(() => {
     return SCALE_OPTIONS.find((option) => option.key === scaleKey)?.value ?? 1
   }, [scaleKey])
@@ -142,6 +161,18 @@ export function AvailabilityPreview() {
       ...prev,
       [key]: nextValue,
     }))
+  }
+
+  const movePerson = (personId: string, direction: -1 | 1) => {
+    setPersonOrder((prev) => {
+      const index = prev.indexOf(personId)
+      if (index === -1) return prev
+      const nextIndex = index + direction
+      if (nextIndex < 0 || nextIndex >= prev.length) return prev
+      const next = [...prev]
+      ;[next[index], next[nextIndex]] = [next[nextIndex], next[index]]
+      return next
+    })
   }
 
   useEffect(() => {
@@ -197,6 +228,15 @@ export function AvailabilityPreview() {
                 <th
                   className={
                     variant === 'print'
+                      ? 'availability__index-col availability__index-col--print'
+                      : 'availability__index-col'
+                  }
+                >
+                  No
+                </th>
+                <th
+                  className={
+                    variant === 'print'
                       ? 'availability__name-col availability__name-col--print'
                       : 'availability__name-col'
                   }
@@ -222,21 +262,48 @@ export function AvailabilityPreview() {
             <tbody>
               {filteredDays.length === 0 ? (
                 <tr>
-                  <td className="availability__empty" colSpan={filteredDays.length + 1}>
+                  <td className="availability__empty" colSpan={filteredDays.length + 2}>
                     表示したい曜日または祝日を選択してください。
                   </td>
                 </tr>
-              ) : sortedPersons.length === 0 ? (
+              ) : orderedPersons.length === 0 ? (
                 <tr>
-                  <td className="availability__empty" colSpan={filteredDays.length + 1}>
+                  <td className="availability__empty" colSpan={filteredDays.length + 2}>
                     審判マスタが登録されていません。
                   </td>
                 </tr>
               ) : (
-                sortedPersons.map((person) => (
+                orderedPersons.map((person, index) => (
                   <tr key={person.id}>
+                    <th scope="row" className="availability__index-cell">
+                      {index + 1}
+                    </th>
                     <th scope="row" className="availability__name-cell">
-                      {person.displayName}
+                      <div className="availability__name-row">
+                        <span className="availability__name-label">{person.displayName}</span>
+                        {variant === 'screen' && (
+                          <span className="availability__order-controls">
+                            <button
+                              type="button"
+                              className="availability__order-button"
+                              onClick={() => movePerson(person.id, -1)}
+                              disabled={index === 0}
+                              aria-label="上へ移動"
+                            >
+                              ↑
+                            </button>
+                            <button
+                              type="button"
+                              className="availability__order-button"
+                              onClick={() => movePerson(person.id, 1)}
+                              disabled={index === orderedPersons.length - 1}
+                              aria-label="下へ移動"
+                            >
+                              ↓
+                            </button>
+                          </span>
+                        )}
+                      </div>
                     </th>
                     {filteredDays.map((day) => {
                       const key = toKey(person.id, day.key)

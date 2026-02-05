@@ -103,6 +103,9 @@ importers:
       '@coop-assign/domain':
         specifier: workspace:*
         version: link:../domain
+      firebase:
+        specifier: ^12.4.0
+        version: 12.4.0
 
   packages/domain: {}
 
